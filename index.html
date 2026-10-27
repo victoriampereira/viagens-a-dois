@@ -9,9 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Viagens a Dois">
-<link rel="apple-touch-icon" href="icon-180.png?v=6">
-<link rel="icon" type="image/png" href="icon-192.png?v=6">
-<link rel="manifest" href="manifest.webmanifest?v=6">
+<link rel="apple-touch-icon" href="icon-180.png?v=7">
+<link rel="icon" type="image/png" href="icon-192.png?v=7">
+<link rel="manifest" href="manifest.webmanifest?v=7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
@@ -533,7 +533,7 @@ function tabbar(on){
   if (!dentro) return `<nav class="tabbar" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="Navegação">${t('#/', 'viagens', 'mala', 'Viagens')}${nos()}</nav>`;
   return `<nav class="tabbar" aria-label="Navegação">
     ${t('#/v/'+a, 'inicio', 'casa', 'Início')}
-    ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Despesas')}
+    ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Financeiro')}
     ${t('#/v/'+a+'/lugares', 'roteiro', 'rota', 'Roteiro')}
     ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
     ${t('#/', 'viagens', 'mala', 'Viagens', 'so-desk')}${nos('so-desk')}
@@ -670,14 +670,14 @@ function telaViagem(id, aba){
   const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
   const inicio = `<div class="lstA">
     ${linhaI('#/novo/'+id, 'plus', 'Registrar despesa', 'Anotar uma compra')}
-    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Despesas', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
+    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Financeiro', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
     ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
     ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}</div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
   const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
   let tela;
-  if (aba === 'gastos') tela = cab('Despesas', 'Quanto já gastaram e como dividir.') + corpoGastos;
+  if (aba === 'gastos') tela = cab('Financeiro', 'Quanto já gastaram e como dividir.') + corpoGastos;
   else if (aba === 'lugares') tela = cab('Roteiro', 'Onde vamos ficar e o que queremos conhecer.', segRot) + corpoRoteiro(v, 'dados');
   else if (aba === 'dias') tela = cab('Roteiro', 'O que vamos fazer em cada dia da viagem.', segRot) + corpoRoteiro(v, 'dias');
   else if (aba === 'reservas') tela = cab('Reservas', 'Passagens da viagem.') + corpoReservas(v);
@@ -1466,7 +1466,7 @@ function telaHosp(id){
   document.getElementById('bt-ed').onclick = () => editarHosp(it.viagem_id, it);
 }
 function abasViagem(id, aba){
-  const t = [['gastos','Despesas'],['roteiro','Roteiro'],['lugares','Lugares'],['reservas','Reservas']];
+  const t = [['gastos','Financeiro'],['roteiro','Roteiro'],['lugares','Lugares'],['reservas','Reservas']];
   return `<div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))" role="group" aria-label="Seções da viagem">${t.map(([k,l]) => `<button data-aba="${k}" aria-pressed="${aba === k}">${l}</button>`).join('')}</div>`;
 }
 
@@ -1494,7 +1494,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-38';
+const VERSAO = '2026-10-27-39';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
