@@ -262,6 +262,29 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .sheet.r-longa h3{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet.r-longa{max-height:92vh;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .r-vazio{padding:18px 16px;color:var(--muted);font-size:14px;text-align:center}
+
+.so-desk{display:none!important}
+/* computador: barra lateral + conteúdo (mesmo jeito do Fitness) */
+@media (min-width:1000px){
+#app{max-width:1180px;display:grid;grid-template-columns:210px minmax(0,1fr);column-gap:48px;row-gap:0;align-items:start;min-height:auto;padding:48px 24px 64px}
+#app>*:not(.tabbar){grid-column:2;max-width:760px;margin-bottom:14px}
+#app>.sh{margin-bottom:6px!important}
+#app>.tabbar{grid-column:1;grid-row:1 / span 99;position:sticky;top:24px;left:auto;bottom:auto;transform:none;width:auto;background:none;border:0;padding:0;display:flex;flex-direction:column;gap:4px;z-index:1}
+.tabbar a,.tabbar .so-desk{display:flex!important;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--muted2);padding:10px 14px;min-height:0;border-radius:10px}
+.tabbar::before{content:"Viagens a Dois";font-size:20px;font-weight:800;letter-spacing:-.03em;padding:6px 14px 18px;color:var(--ink)}
+.tabbar svg{width:20px;height:20px}
+.tabbar a.on{background:var(--fill);color:var(--acc)}
+.tabbar a.on::after{display:none}
+.tabbar a:hover{background:var(--fill)}
+.veil{align-items:center}
+.sheet{border-radius:20px;width:min(460px,92vw)}
+.sheet2 .grab,.sheet .grab{display:none}
+#app.folha{background:#fff;padding:48px 24px 64px;gap:0 48px}
+#app.folha>.fundo{grid-column:2;max-width:440px;color:var(--ink);opacity:1;min-height:0;padding:0 0 14px}
+#app.folha>.sheet2{grid-column:2;max-width:440px;flex:none;border:1px solid var(--fill2);border-radius:22px;padding:16px 16px 20px;margin:0}
+.fundo-v{color:var(--acc)}
+#toast{bottom:32px}
+}
 </style>
 </head>
 <body>
@@ -452,6 +475,7 @@ function tabbar(on){
     ${t(a ? '#/novo/'+a : '#/nova-viagem', 'novo', 'mais', 'Novo gasto')}
     ${t(a ? '#/acerto/'+a : '#/nova-viagem', 'acerto', 'troca', 'Divisão')}
     ${t(a ? '#/limite/'+a : '#/nova-viagem', 'limite', 'ajuste', 'Limite')}
+    <a href="#/nos" aria-label="Nós" class="so-desk ${on==='nos'?'on':''}">${sv('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M19 15c1.5.8 2.4 2.3 2.7 4.5"/>',26,1.7)}Nós</a>
   </nav>`;
 }
 
@@ -968,7 +992,7 @@ function telaNos(){
   <div class="sh">Tela de início</div>
   <div class="grp"><div class="row" style="cursor:default"><span class="tx"><span style="font-size:14px;color:var(--muted2)">iPhone: no Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”. Android: no Chrome, menu ⋮ e “Adicionar à tela inicial”. Se pedir o código depois, cole o link do casal.</span></span></div></div>
   <div class="grp"><button class="row danger" id="bt-sair" style="justify-content:center;font-weight:600">Sair deste celular</button></div>
-  ${tabbar('')}`;
+  ${tabbar('nos')}`;
   $app.querySelectorAll('[data-cat-ed]').forEach(b => b.onclick = async () => { const c = CATS.find(x => x.id === b.dataset.catEd); if (await editarCategoria(c)) telaNos(); });
   document.getElementById('bt-nova-cat').onclick = async () => { if (await editarCategoria(null)) telaNos(); };
   $app.querySelectorAll('[data-eu]').forEach(b => b.onclick = () => { eu = b.dataset.eu; store.set('vd_eu', eu); telaNos(); toast('Pronto, ' + NOME[eu]); });
@@ -1283,7 +1307,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-15';
+const VERSAO = '2026-10-27-16';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
