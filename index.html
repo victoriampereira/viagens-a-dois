@@ -1382,7 +1382,7 @@ function telaVoo(id){
   const it = itemPorId(id); if (!it) return naoAchou();
   const x = it.dados, v = viagem(it.viagem_id), vol = '#/v/' + it.viagem_id + '/reservas';
   const todosDocs = (D.anexos || []).filter(a => a.viagem_id === it.viagem_id);
-  const lig = Array.isArray(x.anexos) ? todosDocs.filter(a => x.anexos.includes(a.id)) : [];
+  const lig = Array.isArray(x.anexos) ? (D.anexos || []).filter(a => x.anexos.includes(a.id)) : [];
   const doc = lig.length ? lig : todosDocs;
   $app.innerHTML = `
   <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Reservas</a><button id="bt-ed">Editar</button></nav>
@@ -1447,7 +1447,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-22';
+const VERSAO = '2026-10-27-23';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
