@@ -315,6 +315,7 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .r-est .r-n{width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font:700 12px Manrope,sans-serif;display:grid;place-items:center;flex:none;margin:0 2px 0 0}.r-est .r-n.sem{background:var(--fill2);color:var(--muted2)}.r-est.on{background:var(--fill)}
 .r-pv{display:flex;gap:12px;padding:12px 16px;align-items:center}.r-pv img{width:84px;height:64px;border-radius:10px;object-fit:cover;flex:none}.r-pv div{display:flex;flex-direction:column;gap:2px;min-width:0;text-align:left}.r-pv b{font-size:15px}.r-pv small.nt{color:var(--ink);font-weight:600}
 .r-th{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:none}
+.r-lg{align-items:flex-start;padding:12px 16px 12px 12px;gap:12px}.r-lg .r-th{width:92px;height:92px;border-radius:14px;display:block}.r-th.ph{display:grid!important;place-items:center;background:var(--acc-soft);color:var(--acc)}.r-fw{position:relative;flex:none}.r-fw .r-ck{position:absolute;top:6px;left:6px;width:24px;height:24px;background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.18)}.r-fw .r-ck.on{background:var(--acc);border-color:var(--acc)}.r-lg .tx{align-self:stretch;gap:2px;justify-content:center}.r-lg .tx b{font-size:16px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.r-lg .tx .r-ad{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.r-ft{display:flex!important;align-items:center;justify-content:space-between;margin-top:5px}
 .r-n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--acc);color:#fff;font:700 10px Manrope,sans-serif;font-style:normal;margin-right:5px;vertical-align:1px}
 .r-pdf{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:8px;border-top:.5px dashed var(--fill2);font-size:12px;font-weight:600;color:var(--acc)}
 .r-docs{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:14px;color:var(--ink)}
@@ -1344,9 +1345,8 @@ function corpoLugares(v){
   const ls = itensDe(v.id,'atividade').filter(i => ['historico','refeicao'].includes(i.dados.tipo)).sort((a,b) => (a.dados.dia || '9') < (b.dados.dia || '9') ? -1 : 1);
   const ok = ls.filter(i => i.dados.feito).length;
   const lin = ls.map(i => { const x = i.dados, l = linksMapa(x);
-    return `<div class="row" data-at="${i.id}" role="button" tabindex="0"><button class="r-ck ${x.feito ? 'on' : ''}" data-feito="${i.id}" aria-label="Marcar como visitado" aria-pressed="${!!x.feito}">${x.feito ? icr('check',14,3) : ''}</button>
-      ${x.foto ? `<img class="r-th" src="${x.foto}" alt="">` : ''}<span class="tx"><b>${esc(x.titulo)}</b><span>${x.tipo === 'refeicao' ? 'Restaurante' : 'Local histórico'}${x.nota ? ' · ★ ' + String(x.nota).replace('.', ',') : ''}</span>${x.obs || x.endereco ? `<span>${esc(x.obs || x.endereco)}</span>` : ''}</span>
-      <span class="r-dtag ${x.dia ? '' : 'no'}">${x.dia ? 'Dia ' + (diasEntre(v.inicio, x.dia) + 1) : 'Sem dia'}</span>${l.maps ? `<a class="r-pin" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Abrir no mapa" data-nopen>${icr('pin',18,1.9)}</a>` : ''}</div>`; }).join('');
+    return `<div class="row r-lg" data-at="${i.id}" role="button" tabindex="0"><div class="r-fw">${x.foto ? `<img class="r-th" src="${x.foto}" alt="">` : `<span class="r-th ph">${icr(x.tipo === 'refeicao' ? 'busca' : 'land',30,1.4)}</span>`}<button class="r-ck ${x.feito ? 'on' : ''}" data-feito="${i.id}" aria-label="Marcar como visitado" aria-pressed="${!!x.feito}">${x.feito ? icr('check',14,3) : ''}</button></div>
+      <span class="tx"><b>${esc(x.titulo)}</b><span>${x.tipo === 'refeicao' ? 'Restaurante' : 'Local histórico'}${x.nota ? ' · ★ ' + String(x.nota).replace('.', ',') : ''}</span>${x.obs || x.endereco ? `<span class="r-ad">${esc(x.obs || x.endereco)}</span>` : ''}<span class="r-ft"><span class="r-dtag ${x.dia ? '' : 'no'}">${x.dia ? 'Dia ' + (diasEntre(v.inicio, x.dia) + 1) : 'Sem dia'}</span>${l.maps ? `<a class="r-pin" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Abrir no mapa" data-nopen>${icr('pin',18,1.9)}</a>` : ''}</span></span></div>`; }).join('');
   if (!ls.length) return `<div class="r-vaz"><i>${icr('land',34,1.5)}</i><b>Nenhum lugar ainda</b><span>Procure pelo nome, como "Coliseu" ou "Kampeki Sushi", e o app traz foto, nota e endereço.</span><button class="btn" data-novo-lugar>${icr('plus',20,2.2)} Adicionar lugar</button></div>`;
   return `${ls.length ? `<div class="r-prog"><span><b>${ok}</b> de ${ls.length} visitado${ls.length === 1 ? '' : 's'}</span><div class="bar"><span style="width:${ok / ls.length * 100}%;background:var(--acc)"></span></div></div>` : ''}
     <div class="grp">${lin || '<div class="r-vazio">Nenhum lugar ainda.</div>'}<button class="row r-add2" data-novo-lugar><span class="tx"><b>${icr('plus',16,2.2)} Adicionar lugar</b></span></button></div>`;
@@ -1486,7 +1486,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-31';
+const VERSAO = '2026-10-27-32';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
