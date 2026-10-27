@@ -291,6 +291,7 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .dv-p{margin-top:4px;border-radius:9px;padding:7px 6px;font-size:12px;font-weight:600;text-align:center;background:var(--fill2);color:var(--muted)}
 .dv-p.g{background:#E3F4E8;color:#1E7A3D}.dv-p.r{background:#FCE8E6;color:#C0392B}
 .lstA{display:flex;flex-direction:column}
+.lstF .ra{padding:10px 0}
 .ra{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:.5px solid var(--fill2);color:var(--ink)}
 .ra:last-child{border-bottom:0}.ra-i{width:26px;display:grid;place-items:center;color:var(--acc);flex:none}
 .ra-t{flex:1;display:flex;flex-direction:column;min-width:0}.ra-t b{font-size:15px;font-weight:600}.ra-t span{font-size:12.5px;color:var(--muted)}.ra>svg{color:#B5B5BA}
@@ -658,20 +659,20 @@ function telaViagem(id, aba){
   const topo = fat[0];
   const legenda = fat.map(c => `<div class="lg-it"><span class="dot" style="background:${CAT_COR[c.id]}"></span><span class="lg-n">${c.nome}</span><span class="lg-p">${Math.round(r.cat[c.id]/r.total*100)}%</span><b>${brl(r.cat[c.id])}</b></div>`).join('');
   const legendaFina = fat.map(c => `<div class="gl-it"><span class="dot" style="background:${CAT_COR[c.id]}"></span><span class="gl-n">${c.nome}</span><span class="gl-v">${brl(r.cat[c.id])}</span><span class="gl-p">${Math.round(r.cat[c.id]/r.total*100)}%</span></div>`).join('');
-  const linhaA = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
+  const linhaA = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b>${s ? `<span>${s}</span>` : ''}</span>${sv(IC.seta,16,1.5)}</a>`;
   const corpoGastos = `
   <div class="tot"><span class="tot-l">Total</span><b>${brl(r.total)}</b>
     <span class="tot-s">${lim ? (r.total > lim ? `passou ${brl(r.total - lim)} do limite de ${brl(lim)}` : `de ${brl(lim)} · ${Math.round(r.total/lim*100)}%`) : `<a href="#/limite/${id}">definir limite</a>`}${dias ? ` · ${porDia} por dia` : ''}</span></div>
   ${fat.length ? `<div class="gringo"><div class="ring-f">${anel(r, 0, true)}</div><div class="gl">${legendaFina}</div></div>` : ''}
-  <div class="lstA">
-    ${linhaA('#/gastos/'+id, 'list', 'Ver todas as compras', `${r.gs.length} compra${r.gs.length===1?'':'s'} registrada${r.gs.length===1?'':'s'}`)}
-    ${linhaA('#/acerto/'+id, 'troca', 'Divisão dos gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
+  <div class="lstA lstF">
+    ${linhaA('#/gastos/'+id, 'list', 'Ver todas as compras', '')}
+    ${linhaA('#/acerto/'+id, 'troca', 'Ver divisão dos gastos', '')}
   </div>
 `;
   const nH = itensDe(id,'hospedagem').length, nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
-  const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
+  const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b>${s ? `<span>${s}</span>` : ''}</span>${sv(IC.seta,16,1.5)}</a>`;
   const inicio = `<div class="lstA">
-    ${linhaI('#/novo/'+id, 'plus', 'Registrar despesa', 'Anotar uma compra')}
+    ${linhaI('#/novo/'+id, 'plus', 'Registrar compra', '')}
     ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Financeiro', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
     ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
@@ -1488,7 +1489,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-44';
+const VERSAO = '2026-10-27-45';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
