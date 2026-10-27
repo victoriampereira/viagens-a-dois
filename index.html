@@ -273,9 +273,13 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .grp{border-radius:12px}.tile{width:26px;height:26px;border-radius:7px}
 .r-it .tx b{font-size:13.5px}.r-it .tx span{font-size:11.5px}.r-hr{font-size:12px}.valor{font-size:44px}.keys button{font-size:22px;height:48px}.r-voo-r b,.r-bp-m b{font-size:22px}.r-bp-m b{font-size:28px}
 .so-desk{display:none!important}
-.r-mapa{height:230px;border-radius:16px;overflow:hidden;background:var(--fill);margin:4px 0 6px;position:relative;z-index:0}
+.r-mapa{height:272px;border-radius:16px;overflow:hidden;background:var(--fill);margin:4px 0 6px;position:relative;z-index:0}
+.r-mapa .leaflet-tile-pane{filter:saturate(.7) contrast(.95) brightness(1.04)}
 .r-mapa.vazio{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;font-size:13px;color:var(--muted2);height:auto;min-height:64px}
 .r-mk{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font:700 13px/28px Manrope,sans-serif;text-align:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.r-est .r-n{width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font:700 12px Manrope,sans-serif;display:grid;place-items:center;flex:none;margin:0 2px 0 0}.r-est .r-n.sem{background:var(--fill2);color:var(--muted2)}.r-est.on{background:var(--fill)}
+.r-pv{display:flex;gap:12px;padding:12px 16px;align-items:center}.r-pv img{width:84px;height:64px;border-radius:10px;object-fit:cover;flex:none}.r-pv div{display:flex;flex-direction:column;gap:2px;min-width:0;text-align:left}.r-pv b{font-size:15px}.r-pv small.nt{color:var(--ink);font-weight:600}
+.r-th{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:none}
 .r-n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--acc);color:#fff;font:700 10px Manrope,sans-serif;font-style:normal;margin-right:5px;vertical-align:1px}
 .r-pdf{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:8px;border-top:.5px dashed var(--fill2);font-size:12px;font-weight:600;color:var(--acc)}
 .r-docs{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:14px;color:var(--ink)}
@@ -1063,7 +1067,7 @@ const ICR = {
   doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'
 };
 const icr = (k, w = 18, sw = 1.8) => sv(ICR[k] || IC[k] || IC.tag, w, sw);
-const TIPOS_AT = [['passeio','Passeio'],['historico','Local histórico'],['refeicao','Refeição'],['outro','Outro']];
+const TIPOS_AT = [['passeio','Passeio'],['historico','Local histórico'],['refeicao','Restaurante'],['outro','Outro']];
 const AT_ICO = { passeio:['pin',''], historico:['land','h'], refeicao:['comida','f'], outro:['tag','o'] };
 const hm = dt => (dt || '').slice(11,16);
 const dtDia = dt => (dt || '').slice(0,10);
@@ -1091,7 +1095,12 @@ function diasDaViagem(v){
 const diasOpc = (v, comVazio) => (comVazio ? [['','Sem dia definido']] : []).concat(diasDaViagem(v).map((d,i) => [d, `Dia ${diasEntre(v.inicio, d) + 1} · ${fmtDS(d)}`]));
 
 /* busca de lugares (Photon/OpenStreetMap; pode ser trocada por outro provedor aqui) */
-async function buscarLugares(q){
+const FN_LUGARES = SB_URL + '/functions/v1/lugares';
+async function fnLugares(corpo){
+  const r = await fetch(FN_LUGARES, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(Object.assign({ chave }, corpo)) });
+  const j = await r.json(); if (!r.ok || j.erro) throw new Error(j.erro || 'busca'); return j;
+}
+async function buscarLugaresOSM(q){
   const r = await fetch('https://photon.komoot.io/api/?limit=7&lang=en&q=' + encodeURIComponent(q));
   if (!r.ok) throw new Error('busca');
   const j = await r.json();
@@ -1099,10 +1108,22 @@ async function buscarLugares(q){
     const rua = [p.street, p.housenumber].filter(Boolean).join(' ');
     const sub = [rua, p.district, p.city || p.county, p.state, p.country].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
     const nome = p.name || rua || sub;
-    return { nome, sub, endereco: [nome !== rua ? rua : '', p.city || p.county, p.country].filter(Boolean).join(', '), cidade: p.city || p.county || p.state || '', lat: +c[1].toFixed(6), lng: +c[0].toFixed(6) }; })
+    return { nome, sub, osm: { nome, sub, endereco: [nome !== rua ? rua : '', p.city || p.county, p.country].filter(Boolean).join(', '), cidade: p.city || p.county || p.state || '', lat: +c[1].toFixed(6), lng: +c[0].toFixed(6) } }; })
     .filter(p => p.nome);
 }
-const linkLugar = p => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.nome + (p.sub ? ', ' + p.sub : ''));
+async function buscarLugares(q, v){
+  try {
+    const est = v ? itensDe(v.id,'estadia').find(i => i.dados.lat) : null;
+    const j = await fnLugares({ op:'sug', q, lat: est && est.dados.lat, lng: est && est.dados.lng });
+    return j.itens;
+  } catch(e){ return buscarLugaresOSM(q); }
+}
+async function detalheLugar(s){
+  if (s.osm) return s.osm;
+  const p = await fnLugares({ op:'det', id: s.id });
+  return { nome: p.nome, sub: s.sub, endereco: p.endereco, cidade: '', lat: +(+p.lat).toFixed(6), lng: +(+p.lng).toFixed(6), nota: p.nota, avaliacoes: p.avaliacoes, foto: p.foto, link: p.link, place_id: p.place_id, restaurante: p.restaurante, tipo_g: p.tipo_g };
+}
+const linkLugar = p => p.link || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.nome + (p.sub ? ', ' + p.sub : '')));
 
 /* folha genérica de formulário */
 function folha(titulo, campos, x, opt){
@@ -1130,11 +1151,16 @@ function folha(titulo, campos, x, opt){
     if (bq) { let tm, n = 0; const sug = w.querySelector('#f-sug');
       bq.oninput = () => { clearTimeout(tm); const q = bq.value.trim(); if (q.length < 3) { sug.innerHTML = ''; return; }
         tm = setTimeout(async () => { const mine = ++n; sug.innerHTML = '<div class="r-sg-i muted">Buscando…</div>';
-          try { const rs = await buscarLugares(q); if (mine !== n) return;
+          try { const rs = await buscarLugares(q, opt.viagem); if (mine !== n) return;
             sug.innerHTML = rs.length ? rs.map((p, i) => `<button type="button" class="row r-sg" data-i="${i}"><span class="tile soft">${icr('pin',16)}</span><span class="tx"><b>${esc(p.nome)}</b><span>${esc(p.sub)}</span></span></button>`).join('') : '<div class="r-sg-i muted">Nada encontrado. Tente outro nome.</div>';
-            sug.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const p = rs[+b.dataset.i], m = opt.busca(p);
-              Object.keys(m).forEach(k => { const el = w.querySelector(`[name="${k}"]`); if (el && el.tagName !== 'SELECT') el.value = m[k]; });
-              extra.lat = p.lat; extra.lng = p.lng; bq.value = ''; sug.innerHTML = `<div class="r-sg-i ok">${icr('check',14,3)} ${esc(p.nome)} · localização salva</div>`; });
+            sug.querySelectorAll('[data-i]').forEach(b => b.onclick = async () => { const s = rs[+b.dataset.i];
+              sug.innerHTML = '<div class="r-sg-i muted">Carregando o lugar…</div>';
+              let p; try { p = await detalheLugar(s); } catch(e){ sug.innerHTML = '<div class="r-sg-i muted">Não consegui abrir esse lugar. Tente outro.</div>'; return; }
+              const m = opt.busca(p);
+              Object.keys(m).forEach(k => { const el = w.querySelector(`[name="${k}"]`); if (el) el.value = m[k]; });
+              ['lat','lng','place_id','nota','avaliacoes','foto'].forEach(k => { if (p[k] != null) extra[k] = p[k]; });
+              extra.link = linkLugar(p); bq.value = '';
+              sug.innerHTML = `<div class="r-pv">${p.foto ? `<img src="${p.foto}" alt="">` : ''}<div><b>${esc(p.nome)}</b><small>${esc(p.endereco || p.sub || '')}</small>${p.nota ? `<small class="nt">★ ${String(p.nota).replace('.', ',')}${p.avaliacoes ? ' · ' + p.avaliacoes.toLocaleString('pt-BR') + ' avaliações' : ''}</small>` : ''}</div></div><div class="r-sg-i ok">${icr('check',14,3)} Lugar selecionado</div>`; });
           } catch(e){ if (mine === n) sug.innerHTML = '<div class="r-sg-i muted">Busca indisponível agora. Preencha à mão.</div>'; } }, 380); }; }
     const del = w.querySelector('#f-del'); if (del) del.onclick = () => { if (confirm('Excluir este item?')) fim('__excluir'); };
     w.querySelector('form').onsubmit = e => {
@@ -1167,10 +1193,10 @@ const editarAtividade = (vid, it, pre) => { const v = viagem(vid);
     { k:'dia', l:'Dia', t:'select', o:diasOpc(v, true) }, { k:'hora', l:'Horário', t:'time' },
     { k:'endereco', l:'Endereço', ph:'Rua, número, cidade' }, { k:'link', l:'Link Maps ou Waze', ph:'Colar link' }, { k:'obs', l:'Observação' }],
     Object.assign({ tipo:'passeio', titulo:'', dia:'', hora:'', endereco:'', link:'', obs:'', feito:false }, pre || {}),
-    { titulo: it ? 'Editar atividade' : (pre && pre.tipo === 'historico' ? 'Novo local histórico' : 'Nova atividade'), obrig:'titulo', busca: p => ({ titulo: p.nome, endereco: p.endereco, link: linkLugar(p) }) }); };
+    { titulo: it ? 'Editar atividade' : (pre && pre.tipo === 'historico' ? 'Novo local histórico' : 'Nova atividade'), obrig:'titulo', busca: p => Object.assign({ titulo: p.nome, endereco: p.endereco, link: linkLugar(p) }, p.restaurante ? { tipo: 'refeicao' } : {}), viagem: v }); };
 const editarEstadia = (vid, it, pre) => editarItem(vid, 'estadia', it, [
     { k:'cidade', l:'Local', ph:'Ex.: Antígua' }, { k:'de', l:'Chegada', t:'date' }, { k:'ate', l:'Saída', t:'date' }],
-    Object.assign({ cidade:'', de:'', ate:'' }, pre || {}), { titulo: it ? 'Editar local' : 'Novo local', obrig:'cidade', msg:'Dê um nome para o local', busca: p => ({ cidade: p.nome }) });
+    Object.assign({ cidade:'', de:'', ate:'' }, pre || {}), { titulo: it ? 'Editar local' : 'Novo local', obrig:'cidade', msg:'Dê um nome para o local', busca: p => ({ cidade: p.nome }), viagem: viagem(vid) });
 const editarVoo = (vid, it, pre) => editarItem(vid, 'voo', it, [
     { k:'grupo', l:'Trecho', ph:'Ida, Volta…' }, { k:'cia', l:'Companhia' }, { k:'numero', l:'Voo', ph:'Ex.: CM 204' },
     { k:'de', l:'Origem', ph:'Sigla (GIG)' }, { k:'cidade_de', l:'Cidade de origem' }, { k:'para', l:'Destino', ph:'Sigla (GUA)' }, { k:'cidade_para', l:'Cidade de destino' },
@@ -1184,7 +1210,7 @@ const editarHosp = (vid, it, pre) => editarItem(vid, 'hospedagem', it, [
     { k:'endereco', l:'Endereço', ph:'Rua, número, cidade' }, { k:'link', l:'Link Maps ou Waze', ph:'Colar link' },
     { k:'reserva', l:'Código da reserva' }, { k:'valor', l:'Valor', ph:'Ex.: R$ 1.050' }, { k:'obs', l:'Observação' }],
     Object.assign({ nome:'', cidade:'', entrada:'', hora_entrada:'', saida:'', hora_saida:'', endereco:'', link:'', reserva:'', valor:'', obs:'' }, pre || {}),
-    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Dê um nome para a hospedagem', busca: p => ({ nome: p.nome, cidade: p.cidade, endereco: p.endereco, link: linkLugar(p) }) });
+    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Dê um nome para a hospedagem', busca: p => ({ nome: p.nome, cidade: p.cidade, endereco: p.endereco, link: linkLugar(p) }), viagem: viagem(vid) });
 
 /* --- abas da viagem --- */
 function entradasDia(vid, d){
@@ -1211,15 +1237,16 @@ function linhaDia(e){
 function corpoRoteiro(v){
   if (!v.inicio) return `<div class="grp"><div class="r-vazio">Defina as datas da viagem para ver os dias do roteiro.<br><a href="#/limite/${v.id}">Editar viagem</a></div></div>`;
   const hoje = hojeISO(), es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
-  const chips = es.map((i, n) => { const e = i.dados, ativo = e.de <= hoje && hoje < e.ate;
-    return `<button class="r-ch ${ativo ? 'on' : ''}" data-est="${i.id}"><b>${e.lat ? `<i class="r-n">${n + 1}</i>` : ''}${esc(e.cidade)}</b><span>${e.de ? fmtDia(e.de) : ''}${e.ate ? ' – ' + fmtDia(e.ate) : ''}</span></button>`; }).join('');
+  const noites = e => (e.de && e.ate) ? diasEntre(e.de, e.ate) : 0;
+  const lista = es.map((i, n) => { const e = i.dados, ativo = e.de <= hoje && hoje < e.ate, nn = noites(e);
+    return `<button class="row r-est ${ativo ? 'on' : ''}" data-est="${i.id}"><span class="r-n ${e.lat ? '' : 'sem'}">${n + 1}</span><span class="tx"><b>${esc(e.cidade)}</b><span>${e.de ? fmtDia(e.de) : ''}${e.ate ? ' – ' + fmtDia(e.ate) : ''}</span></span>${nn ? `<span class="val">${nn} noite${nn === 1 ? '' : 's'}</span>` : ''}</button>`; }).join('');
   const dias = diasDaViagem(v).map(d => {
     const lin = entradasDia(v.id, d).map(linhaDia).join(''), on = onde(v.id, d);
     return `<div><div class="r-dh ${d === hoje ? 'hoje' : ''}"><b>Dia ${diasEntre(v.inicio, d) + 1}</b><span>${fmtDS(d)}</span>${on ? `<i>${icr('pin',12,2)} ${esc(on)}</i>` : ''}</div>
       <div class="grp">${lin}<button class="row r-it r-add" data-add-dia="${d}"><span class="r-hr"></span><span class="tx"><b>${icr('plus',16,2.2)} Adicionar atividade</b></span></button></div></div>`; }).join('');
   return `<div class="sh" style="margin:2px 0 -6px 4px">Onde estaremos</div>
-    <div class="r-onde">${chips}<button class="r-ch add" data-est="">+ Local</button></div>
-    ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}${dias}`;
+    ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}
+    <div class="grp">${lista}<button class="row r-add2" data-est=""><span class="tx"><b>${icr('plus',16,2.2)} Adicionar local</b></span></button></div>${dias}`;
 }
 function carregarLeaflet(){
   if (window.L) return Promise.resolve();
@@ -1233,8 +1260,9 @@ async function desenharMapa(v){
   if (!document.body.contains(el)) return;
   const es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
   const pts = []; es.forEach((i, n) => { if (i.dados.lat) pts.push([+i.dados.lat, +i.dados.lng, n + 1, i.dados.cidade]); });
-  const map = L.map(el, { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
+  const map = L.map(el, { zoomControl: false, attributionControl: false, scrollWheelZoom: false });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+  L.control.attribution({ prefix: false }).addTo(map);
   if (pts.length > 1) L.polyline(pts.map(p => [p[0], p[1]]), { color: '#0A84FF', weight: 3, dashArray: '2 7', opacity: .85 }).addTo(map);
   itensDe(v.id,'atividade').forEach(i => { const x = i.dados; if (x.lat) L.circleMarker([+x.lat, +x.lng], { radius: 5, color: '#fff', weight: 2, fillColor: '#FF9500', fillOpacity: 1 }).addTo(map).bindTooltip(x.titulo); });
   pts.forEach(p => L.marker([p[0], p[1]], { icon: L.divIcon({ className: '', html: `<div class="r-mk">${p[2]}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(map).bindTooltip(p[3]));
@@ -1242,14 +1270,14 @@ async function desenharMapa(v){
   if (todos.length === 1) map.setView(todos[0], 11); else map.fitBounds(todos, { padding: [28, 28] });
 }
 function corpoLugares(v){
-  const ls = itensDe(v.id,'atividade').filter(i => i.dados.tipo === 'historico').sort((a,b) => (a.dados.dia || '9') < (b.dados.dia || '9') ? -1 : 1);
+  const ls = itensDe(v.id,'atividade').filter(i => ['historico','refeicao'].includes(i.dados.tipo)).sort((a,b) => (a.dados.dia || '9') < (b.dados.dia || '9') ? -1 : 1);
   const ok = ls.filter(i => i.dados.feito).length;
   const lin = ls.map(i => { const x = i.dados, l = linksMapa(x);
     return `<div class="row" data-at="${i.id}" role="button" tabindex="0"><button class="r-ck ${x.feito ? 'on' : ''}" data-feito="${i.id}" aria-label="Marcar como visitado" aria-pressed="${!!x.feito}">${x.feito ? icr('check',14,3) : ''}</button>
-      <span class="tx"><b>${esc(x.titulo)}</b>${x.obs || x.endereco ? `<span>${esc(x.obs || x.endereco)}</span>` : ''}</span>
+      ${x.foto ? `<img class="r-th" src="${x.foto}" alt="">` : ''}<span class="tx"><b>${esc(x.titulo)}</b><span>${x.tipo === 'refeicao' ? 'Restaurante' : 'Local histórico'}${x.nota ? ' · ★ ' + String(x.nota).replace('.', ',') : ''}</span>${x.obs || x.endereco ? `<span>${esc(x.obs || x.endereco)}</span>` : ''}</span>
       <span class="r-dtag ${x.dia ? '' : 'no'}">${x.dia ? 'Dia ' + (diasEntre(v.inicio, x.dia) + 1) : 'Sem dia'}</span>${l.maps ? `<a class="r-pin" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Abrir no mapa" data-nopen>${icr('pin',18,1.9)}</a>` : ''}</div>`; }).join('');
   return `${ls.length ? `<div class="r-prog"><span><b>${ok}</b> de ${ls.length} visitado${ls.length === 1 ? '' : 's'}</span><div class="bar"><span style="width:${ok / ls.length * 100}%;background:var(--acc)"></span></div></div>` : ''}
-    <div class="grp">${lin || '<div class="r-vazio">Nenhum local histórico ainda.</div>'}<button class="row r-add2" data-novo-lugar><span class="tx"><b>${icr('plus',16,2.2)} Adicionar lugar</b></span></button></div>
+    <div class="grp">${lin || '<div class="r-vazio">Nenhum lugar ainda.</div>'}<button class="row r-add2" data-novo-lugar><span class="tx"><b>${icr('plus',16,2.2)} Adicionar lugar</b></span></button></div>
     <div class="foot">Toque no círculo para marcar como visitado. Toque no pin para abrir no mapa.</div>`;
 }
 const cartaoVoo = i => { const x = i.dados;
@@ -1384,7 +1412,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-18';
+const VERSAO = '2026-10-27-19';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
