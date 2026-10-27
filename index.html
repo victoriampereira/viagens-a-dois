@@ -533,7 +533,7 @@ function tabbar(on){
   if (!dentro) return `<nav class="tabbar" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="Navegação">${t('#/', 'viagens', 'mala', 'Viagens')}${nos()}</nav>`;
   return `<nav class="tabbar" aria-label="Navegação">
     ${t('#/v/'+a, 'inicio', 'casa', 'Início')}
-    ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Gastos')}
+    ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Despesas')}
     ${t('#/v/'+a+'/lugares', 'roteiro', 'rota', 'Roteiro')}
     ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
     ${t('#/', 'viagens', 'mala', 'Viagens', 'so-desk')}${nos('so-desk')}
@@ -544,7 +544,7 @@ function tabbar(on){
 function telaEntrar(){
   $app.innerHTML = `
   <div style="height:40px"></div>
-  <h1 class="t">Viagens a Dois</h1><div class="sub" style="margin-top:-6px">Gastos de viagem do Sérgio e da Victoria</div>
+  <h1 class="t">Viagens a Dois</h1><div class="sub" style="margin-top:-6px">Despesas de viagem do Sérgio e da Victoria</div>
   <form id="f-entrar" style="display:flex;flex-direction:column;gap:14px;margin-top:10px">
     <div class="grp"><label class="row" style="cursor:text"><span class="tx" style="flex:none"><b>Código</b></span>
       <input class="fin" id="cod" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Código do casal"></label></div>
@@ -607,7 +607,7 @@ function anel(r, lim, fino){
     off += len;
   });
   const desc = fatias.map(x => `${x.c.nome} ${brl(x.v)}`).join(', ');
-  return `<svg width="${fino ? 108 : 240}" height="${fino ? 108 : 240}" viewBox="0 0 240 240" role="img" aria-label="Gastos por categoria: ${desc || 'nenhum'}">
+  return `<svg width="${fino ? 108 : 240}" height="${fino ? 108 : 240}" viewBox="0 0 240 240" role="img" aria-label="Despesas por categoria: ${desc || 'nenhum'}">
     <g transform="rotate(-90 120 120)" fill="none" stroke-width="${fino ? 13 : 16}" stroke-linecap="butt">
       <circle cx="120" cy="120" r="${R}" stroke="var(--fill2)"/>${arcos}</g></svg>`;
 }
@@ -662,23 +662,23 @@ function telaViagem(id, aba){
     <span class="tot-s">${lim ? (r.total > lim ? `passou ${brl(r.total - lim)} do limite de ${brl(lim)}` : `de ${brl(lim)} · ${Math.round(r.total/lim*100)}%`) : `<a href="#/limite/${id}">definir limite</a>`}${dias ? ` · ${porDia} por dia` : ''}</span></div>
   ${fat.length ? `<div class="gringo"><div class="ring-f">${anel(r, 0, true)}</div><div class="gl">${legendaFina}</div></div>` : ''}
   <div class="lstA">
-    ${linhaA('#/gastos/'+id, 'list', 'Ver todos os gastos', `${r.gs.length} gasto${r.gs.length===1?'':'s'} lançado${r.gs.length===1?'':'s'}`)}
-    ${linhaA('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
+    ${linhaA('#/gastos/'+id, 'list', 'Ver todas as despesas', `${r.gs.length} despesa${r.gs.length===1?'':'s'} registrada${r.gs.length===1?'':'s'}`)}
+    ${linhaA('#/acerto/'+id, 'troca', 'Divisão das Despesas', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
   </div>
 `;
   const nH = itensDe(id,'hospedagem').length, nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
   const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
   const inicio = `<div class="lstA">
-    ${linhaI('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra')}
-    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
+    ${linhaI('#/novo/'+id, 'plus', 'Registrar despesa', 'Anotar uma compra')}
+    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Despesas', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
     ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
     ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}
-    ${linhaI('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}</div>`;
+    ${linhaI('#/acerto/'+id, 'troca', 'Divisão das Despesas', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}</div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
   const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
   let tela;
-  if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + corpoGastos;
+  if (aba === 'gastos') tela = cab('Despesas', 'Quanto já gastaram e como dividir.') + corpoGastos;
   else if (aba === 'lugares') tela = cab('Roteiro', 'Onde vamos ficar e o que queremos conhecer.', segRot) + corpoRoteiro(v, 'dados');
   else if (aba === 'dias') tela = cab('Roteiro', 'O que vamos fazer em cada dia da viagem.', segRot) + corpoRoteiro(v, 'dias');
   else if (aba === 'reservas') tela = cab('Reservas', 'Passagens da viagem.') + corpoReservas(v);
@@ -695,10 +695,10 @@ function telaGastos(id, abaUrl){
   const r = resumo(id);
   const lista = aba === 'todos' ? r.gs : r.gs.filter(g => g.pagou === aba);
   const soma = lista.reduce((t, g) => t + Number(g.valor), 0);
-  const vazio = aba === 'todos' ? 'Nenhum gasto ainda.' : `Nenhum gasto pago ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
+  const vazio = aba === 'todos' ? 'Nenhuma despesa ainda.' : `Nenhuma despesa paga ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
   $app.innerHTML = `
   <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
-  <h1 class="t">Gastos</h1><div class="sub">${lista.length} gasto${lista.length===1?'':'s'} · ${brl(soma)}</div>
+  <h1 class="t">Despesas</h1><div class="sub">${lista.length} despesa${lista.length===1?'':'s'} · ${brl(soma)}</div>
   <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Filtrar">
     <button data-aba="todos" aria-pressed="${aba==='todos'}">Todos</button><button data-aba="S" aria-pressed="${aba==='S'}">Sérgio</button><button data-aba="V" aria-pressed="${aba==='V'}">Victoria</button></div>
   ${listaGastos(lista) || `<div class="grp"><div class="empty">${vazio}</div></div>`}
@@ -795,7 +795,7 @@ function telaGasto(viagemId, gastoId){
   <a class="fundo" href="#/v/${vid}" aria-label="Voltar para a viagem"><span class="fundo-v">${sv(IC.voltar,22,2.4)} Voltar</span><span class="fundo-t">${esc(v.nome)}</span><span class="fundo-s">${fmtPeriodo(v)}</span></a>
   <form id="f-gasto" class="sheet2">
     <span class="grab"></span>
-    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar gasto' : 'Novo gasto'}</h1>
+    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar despesa' : 'Registrar despesa'}</h1>
     <div class="valor ${parseValor(F.valor) ? '' : 'zero'}" id="valor" aria-live="polite" style="margin-top:10px">${fmtDigitado(F.valor)}</div>
     <div class="pills2">
       <button type="button" class="pl on" id="p-cat">${sv(icCat(F.categoria),16,2)}${catNome(F.categoria)}</button>
@@ -807,7 +807,7 @@ function telaGasto(viagemId, gastoId){
     <div class="keys">${teclas.map(t => `<button type="button" data-k="${t}" ${t==='apagar'?'aria-label="Apagar"':''}>${t === 'apagar' ? sv('<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12 9l5 6M17 9l-5 6"/>',26,1.7) : t}</button>`).join('')}</div>
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
-      <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Novo gasto'}</button></div>
+      <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Registrar despesa'}</button></div>
   </form>${tabbar('gastos')}`;
   const desenhar = () => telaGasto(viagemId, gastoId);
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
@@ -835,8 +835,8 @@ function telaGasto(viagemId, gastoId){
   document.getElementById('f-gasto').onsubmit = salvarGasto;
   const bx = document.getElementById('bt-excluir');
   if (bx) bx.onclick = async () => {
-    if (!confirm('Excluir este gasto?')) return;
-    try { await rpc('vd_excluir', { p_tipo: 'gasto', p_id: F.id }); F = null; toast('Gasto excluído'); location.hash = '#/v/' + vid; carregar(); }
+    if (!confirm('Excluir esta despesa?')) return;
+    try { await rpc('vd_excluir', { p_tipo: 'gasto', p_id: F.id }); F = null; toast('Despesa excluída'); location.hash = '#/v/' + vid; carregar(); }
     catch(e){ toast(e.message); }
   };
 }
@@ -868,7 +868,7 @@ async function salvarGasto(ev){
     const ed = !!F.id; F = null;
     await carregar(true);
     const depois = resumo(v.id).total, lim = Number(v.limite) || 0;
-    let msg = ed ? 'Gasto atualizado' : 'Gasto lançado';
+    let msg = ed ? 'Despesa atualizada' : 'Despesa registrada';
     if (false) {
       const pa = antes/lim*100, pd = depois/lim*100;
       if (pd >= 100 && pa < 100) msg = `Atenção: vocês passaram do limite de ${v.nome}`;
@@ -889,7 +889,7 @@ function telaAcerto(id){
       <button class="btn-plain" data-desfaz="${a.id}" style="width:auto;height:36px;font-size:15px">Desfazer</button></div>`).join('');
   $app.innerHTML = `
   <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
-  <h1 class="t">Divisão dos Gastos</h1>
+  <h1 class="t">Divisão das Despesas</h1>
   <div class="dv">
     ${[['S', r.pagoS, r.parteS, r.saldoS], ['V', r.pagoV, r.parteV, -r.saldoS]].map(([k, pago, parte, sd]) => {
       const z = Math.abs(sd) < 0.01, pill = z ? ['', 'Em dia'] : sd > 0 ? ['g', 'Recebe ' + brl(sd, true)] : ['r', 'Paga ' + brl(-sd, true)];
@@ -1020,7 +1020,7 @@ function ligarFormViagem(v){
   };
   const bx = document.getElementById('fv-excluir');
   if (bx) bx.onclick = async () => {
-    if (!confirm(`Excluir a viagem ${v.nome} e todos os gastos dela?`)) return;
+    if (!confirm(`Excluir a viagem ${v.nome} e todas as despesas dela?`)) return;
     try { await rpc('vd_excluir', { p_tipo: 'viagem', p_id: v.id }); store.set('vd_atual', null); location.hash = '#/'; await carregar(); toast('Viagem excluída'); }
     catch(e){ toast(e.message); }
   };
@@ -1043,7 +1043,7 @@ function telaNos(){
   <div class="sh">Quem usa este celular</div>
   <div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))" role="group" aria-label="Quem usa este celular">
     ${['S','V'].map(p => `<button data-eu="${p}" aria-pressed="${eu===p}">${NOME[p]}</button>`).join('')}</div>
-  <div class="foot">Quem pagou já vem marcado com o seu nome ao lançar um gasto.</div>
+  <div class="foot">Quem pagou já vem marcado com o seu nome ao registrar uma despesa.</div>
   <div class="sh">Categorias</div>
   <div class="grp">${CATS.map(c => `<button class="row" data-cat-ed="${c.id}"><span class="cat-ic" style="background:${c.cor}">${sv(icCat(c.id),16,2)}</span><span class="tx"><b>${esc(c.nome)}</b></span>${CHEV}</button>`).join('')}
     <button class="row" id="bt-nova-cat" style="color:var(--acc)"><span class="cat-ic nova">${sv(IC.plus,16,2.2)}</span><span class="tx"><b style="color:var(--acc)">Nova categoria</b></span></button></div>
@@ -1057,7 +1057,7 @@ function telaNos(){
   document.getElementById('bt-nova-cat').onclick = async () => { if (await editarCategoria(null)) telaNos(); };
   $app.querySelectorAll('[data-eu]').forEach(b => b.onclick = () => { eu = b.dataset.eu; store.set('vd_eu', eu); telaNos(); toast('Pronto, ' + NOME[eu]); });
   document.getElementById('bt-link').onclick = async () => {
-    try { if (navigator.share) { await navigator.share({ title: 'Viagens a Dois', text: 'Nosso app de gastos de viagem', url: link }); return; } } catch(e){ if (e.name === 'AbortError') return; }
+    try { if (navigator.share) { await navigator.share({ title: 'Viagens a Dois', text: 'Nosso app de despesas de viagem', url: link }); return; } } catch(e){ if (e.name === 'AbortError') return; }
     try { await navigator.clipboard.writeText(link); toast('Link copiado'); } catch(e){ prompt('Copie o link:', link); }
   };
   document.getElementById('bt-sair').onclick = () => { if (!confirm('Sair deste celular? Vai precisar do código do casal para entrar de novo.')) return; store.set('vd_chave', null); chave = null; render(); };
@@ -1080,7 +1080,7 @@ function pedirValor(titulo, atual, permiteZero){
   });
 }
 function naoAchou(){
-  $app.innerHTML = `<div style="height:40px"></div><h1 class="t">Não encontrada</h1><div class="sub" style="margin-top:-6px">Essa viagem ou gasto não existe mais.</div>
+  $app.innerHTML = `<div style="height:40px"></div><h1 class="t">Não encontrada</h1><div class="sub" style="margin-top:-6px">Essa viagem ou despesa não existe mais.</div>
   <a class="btn" href="#/">Voltar às viagens</a>${tabbar('viagens')}`;
 }
 
@@ -1467,7 +1467,7 @@ function telaHosp(id){
   document.getElementById('bt-ed').onclick = () => editarHosp(it.viagem_id, it);
 }
 function abasViagem(id, aba){
-  const t = [['gastos','Gastos'],['roteiro','Roteiro'],['lugares','Lugares'],['reservas','Reservas']];
+  const t = [['gastos','Despesas'],['roteiro','Roteiro'],['lugares','Lugares'],['reservas','Reservas']];
   return `<div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))" role="group" aria-label="Seções da viagem">${t.map(([k,l]) => `<button data-aba="${k}" aria-pressed="${aba === k}">${l}</button>`).join('')}</div>`;
 }
 
@@ -1495,7 +1495,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-34';
+const VERSAO = '2026-10-27-35';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
