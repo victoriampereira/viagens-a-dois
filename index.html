@@ -1249,6 +1249,15 @@ function corpoRoteiro(v){
     ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}
     <div class="grp">${lista}<button class="row r-add2" data-est=""><span class="tx"><b>${icr('plus',16,2.2)} Adicionar local</b></span></button></div>${dias}`;
 }
+const MAPS_KEY = '';
+function carregarGoogle(){
+  if (window.google && google.maps) return Promise.resolve(true);
+  return window._gm || (window._gm = new Promise(ok => {
+    window.gm_authFailure = () => { window._gm = Promise.resolve(false); };
+    window._gmok = () => ok(true);
+    const s = document.createElement('script'); s.src = 'https://maps.googleapis.com/maps/api/js?key=' + MAPS_KEY + '&v=weekly&language=pt-BR&callback=_gmok'; s.async = true; s.onerror = () => ok(false); document.head.appendChild(s);
+    setTimeout(() => ok(false), 8000); }));
+}
 function carregarLeaflet(){
   if (window.L) return Promise.resolve();
   return window._lf || (window._lf = new Promise((ok, err) => {
@@ -1260,13 +1269,26 @@ async function desenharMapa(v){
   const es0 = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1).filter(i => i.dados.lat).map(i => [+i.dados.lat, +i.dados.lng]);
   const sec0 = itensDe(v.id,'atividade').filter(i => i.dados.lat).map(i => [+i.dados.lat, +i.dados.lng]);
   const kk = JSON.stringify([es0, sec0]);
+  if (MAPS_KEY && await carregarGoogle()) {
+    try {
+      const g = google.maps, map = new g.Map(el, { disableDefaultUI: true, zoomControl: true, gestureHandling: 'cooperative', clickableIcons: false, mapTypeId: 'roadmap', styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }] });
+      const bounds = new g.LatLngBounds();
+      if (es0.length > 1) new g.Polyline({ map, path: es0.map(p => ({ lat: p[0], lng: p[1] })), strokeColor: '#2453A6', strokeOpacity: .85, strokeWeight: 3 });
+      es0.forEach((p, i) => { const pos = { lat: p[0], lng: p[1] }; bounds.extend(pos);
+        new g.Marker({ map, position: pos, label: { text: String(i + 1), color: '#fff', fontWeight: '700', fontSize: '12px' }, icon: { path: g.SymbolPath.CIRCLE, scale: 13, fillColor: '#2453A6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2.5 } }); });
+      sec0.forEach(p => { const pos = { lat: p[0], lng: p[1] }; bounds.extend(pos);
+        new g.Marker({ map, position: pos, icon: { path: g.SymbolPath.CIRCLE, scale: 6, fillColor: '#FF9500', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 } }); });
+      if (es0.length + sec0.length === 1) { map.setCenter(bounds.getCenter()); map.setZoom(11); } else map.fitBounds(bounds, 36);
+      return;
+    } catch(e){ el.innerHTML = ''; }
+  }
   try {
     window._mapas = window._mapas || {};
     const img = window._mapas[kk] || (window._mapas[kk] = (await fnLugares({ op:'mapa', pts: es0, sec: sec0 })).img);
     if (!document.body.contains(el)) return;
     const ll = a => a.join(',');
     const rota = es0.length > 1 ? `https://www.google.com/maps/dir/?api=1&origin=${ll(es0[0])}&destination=${ll(es0[es0.length-1])}${es0.length > 2 ? '&waypoints=' + es0.slice(1,-1).map(ll).join('|') : ''}` : `https://www.google.com/maps/search/?api=1&query=${ll(es0[0])}`;
-    el.innerHTML = `<a href="${rota}" target="_blank" rel="noopener" aria-label="Abrir no Google Maps"><img class="r-mapa-img" src="${img}" alt="Mapa dos locais"></a>`;
+    el.style.height = 'auto'; el.innerHTML = `<a href="${rota}" target="_blank" rel="noopener" aria-label="Abrir no Google Maps"><img class="r-mapa-img" src="${img}" alt="Mapa dos locais"></a>`;
     return;
   } catch(e){ window._mapas && delete window._mapas[kk]; }
   try { await carregarLeaflet(); } catch(e){ el.className = 'r-mapa vazio'; el.textContent = 'Não consegui carregar o mapa agora.'; return; }
@@ -1425,7 +1447,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-20';
+const VERSAO = '2026-10-27-21';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
