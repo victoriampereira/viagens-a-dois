@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Viagens a Dois</title>
+<meta name="theme-color" content="#0B1E40">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Viagens a Dois">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --navy:#0B1E40; --navy2:#14508A; --band:#0A72BA; --blue:#0A6CB5; --sky:#5FC3E4;
+  --green:#057A50; --bg:#F4F4F4; --card:#FFFFFF; --ink:#0B1E40; --muted:#5A6478;
+  --line:#E8E8E8; --line2:#DADADA;
+  --s:#0A6CB5; --s-soft:#E3EEF8;
+  --v:#C8407A; --v-ink:#AD2F66; --v-soft:#FBE4EE;
+  --warn:#B4540A; --warn-soft:#FDF0E3;
+  --tab-h:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#E9EBEF}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);font-size:15px;line-height:1.4}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--blue)}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--bg);position:relative;
+  padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px) + 24px)}
+.pad{padding-left:16px;padding-right:16px}
+
+/* cabeçalhos */
+.hd-sky{background:linear-gradient(180deg,#EAF8FC 0%,#9ED9EA 100%);padding:calc(env(safe-area-inset-top,0px) + 28px) 20px 64px}
+.hd-navy{background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 18px) 16px 76px;text-align:center;position:relative}
+.hd-navy .sub{color:#D4E3F2;font-size:14px}
+.h-light{margin:0;font-weight:300;font-size:30px;line-height:1.15}
+.back{position:absolute;left:6px;top:calc(env(safe-area-inset-top,0px) + 10px);width:44px;height:44px;display:grid;place-items:center;color:inherit;background:none;border:0;cursor:pointer}
+.hd-right{position:absolute;right:6px;top:calc(env(safe-area-inset-top,0px) + 10px);width:44px;height:44px;display:grid;place-items:center;color:inherit;background:none;border:0;cursor:pointer}
+.hd-sky .back{position:static;margin-left:-12px}
+
+/* cartões */
+.card{background:var(--card);border-radius:10px;box-shadow:0 4px 16px rgba(11,30,64,.12)}
+.card-flat{background:var(--card);border:1px solid #E2E2E2;border-radius:10px}
+.lift{margin-top:-48px;position:relative}
+.band{background:var(--band);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:52px;border-radius:8px 8px 0 0;overflow:hidden}
+.band button{border:0;background:transparent;color:#fff;font-size:12px;letter-spacing:.02em;font-weight:400;cursor:pointer;padding:8px 4px}
+.band button[aria-pressed="true"]{font-weight:700;box-shadow:inset 0 -3px 0 #fff}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EFEFEF}
+.row:last-child{border-bottom:0}
+.lbl{font-size:13px;color:var(--blue)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.big-light{font-size:26px;font-weight:300}
+.money{font-variant-numeric:tabular-nums}
+.sec-title{margin:24px 6px 10px;font-size:18px;font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.dot.S{background:var(--s)} .dot.V{background:var(--v)}
+.bar{height:8px;border-radius:999px;background:#E6E6E6;overflow:hidden;display:flex}
+.bar>span{display:block;height:100%}
+.tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tag.ok{background:var(--green);color:#fff}
+.tag.plan{border:1px solid #B9C2D0;color:var(--muted)}
+.tag.now{background:var(--s-soft);color:var(--blue)}
+.tag.end{background:#ECECEC;color:var(--muted)}
+.linkrow{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;color:var(--blue);text-decoration:none;font-size:15px;background:none;border:0;width:100%;cursor:pointer;text-align:left}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+
+/* botões */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:54px;border-radius:8px;border:0;width:100%;font-size:17px;cursor:pointer;text-decoration:none}
+.btn-green{background:var(--green);color:#fff}
+.btn-out{background:#fff;border:1.5px solid var(--blue);color:var(--blue);font-weight:500;height:50px;font-size:16px}
+.btn-ghost{background:transparent;color:#A3243A;height:46px;font-size:15px}
+.btn-line{height:40px;padding:0 14px;border:1.5px solid var(--ink);border-radius:6px;background:transparent;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;width:auto}
+.sticky-cta{position:fixed;left:50%;transform:translateX(-50%);width:min(480px,100%);padding:0 14px;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px) + 12px);z-index:5}
+
+/* barra de abas */
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(480px,100%);background:var(--navy);
+  padding:8px 4px calc(env(safe-area-inset-bottom,0px) + 8px);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));z-index:10}
+.tabbar a{text-decoration:none;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;min-height:48px;justify-content:center}
+.tabbar a.on{font-weight:700}
+.tabbar a.on svg{stroke:var(--sky)}
+.tabbar .av{width:26px;height:26px;border-radius:50%;border:1.5px solid #fff;display:grid;place-items:center;font-size:9px;font-weight:600}
+.tabbar a.on .av{border-color:var(--sky);color:var(--sky)}
+
+/* formulário de gasto */
+.cats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin-top:14px}
+.cats button{border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 10px;font-size:11px;cursor:pointer}
+.cats button[aria-pressed="true"]{font-weight:700;box-shadow:inset 0 -3px 0 var(--sky)}
+.cats button[aria-pressed="true"] svg{stroke:var(--sky)}
+.field{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.field input{width:100%;text-align:center;border:0;background:transparent;outline:none}
+.field input:focus-visible{box-shadow:0 2px 0 var(--blue)}
+.in-big{font-size:38px;font-weight:300}
+.in-mid{font-size:17px}
+.payers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.payers button{height:48px;border-radius:6px;border:1.5px solid transparent;background:transparent;color:var(--muted);font-size:16px;cursor:pointer}
+.payers button.S[aria-pressed="true"]{border-color:var(--s);color:var(--s);font-weight:600;background:#fff}
+.payers button.V[aria-pressed="true"]{border-color:var(--v);color:var(--v-ink);font-weight:600;background:#fff}
+input[type=date]{-webkit-appearance:none;appearance:none;font-size:17px;text-align:center;min-height:30px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+
+/* limite */
+.box{background:#fff;border:1px solid var(--line2);border-radius:6px;padding:12px 12px 12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{height:44px;padding:0 12px 0 18px;border:0;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:500;cursor:pointer;white-space:nowrap}
+.acc{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;border:0;border-bottom:1px solid #9A9A9A;background:transparent;padding:0;font-size:18px;font-weight:600;cursor:pointer;text-align:left;color:var(--ink)}
+.acc svg{transition:transform .2s}
+.acc[aria-expanded="false"] svg{transform:rotate(180deg)}
+.catlim{display:flex;flex-direction:column;gap:6px;padding:12px 0 6px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer}
+.sw{width:50px;height:30px;border:0;border-radius:999px;background:#B8BEC9;position:relative;flex:none;cursor:pointer}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s}
+.sw[aria-pressed="true"]{background:var(--green)}
+.sw[aria-pressed="true"]::after{left:23px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:#fff;cursor:pointer;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.inp{width:100%;height:48px;border:1px solid var(--line2);border-radius:6px;background:#fff;padding:0 14px;font-size:16px}
+.inp-lbl{font-size:13px;color:var(--blue);margin:12px 0 6px;display:block}
+
+/* aviso, toast, folha */
+.alert{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:14px;margin-top:12px}
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px) + 84px);
+  background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.veil{position:fixed;inset:0;background:rgba(11,30,64,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:min(480px,100%);border-radius:18px 18px 0 0;padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-weight:400;font-size:20px}
+.grab{width:40px;height:5px;border-radius:999px;background:#D9D9D9;align-self:center}
+.spin{width:28px;height:28px;border:3px solid #CFE0F0;border-top-color:var(--blue);border-radius:50%;animation:r 1s linear infinite;margin:40vh auto 0}
+@keyframes r{to{transform:rotate(360deg)}}
+.av-c{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;display:grid;place-items:center;font-size:14px;font-weight:600;flex:none}
+.trip-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.trip-card{background:#fff;border:1px solid #E2E2E2;border-radius:10px;padding:16px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:6px}
+.sel-trip{background:transparent;border:0;color:#D4E3F2;font-size:13px;text-align:center;text-align-last:center;max-width:80%;margin:0 auto;display:block;padding:4px 18px 4px 4px;cursor:pointer;-webkit-appearance:none;appearance:none}
+.sel-trip option{color:#0B1E40}
+</style>
+</head>
+<body>
+<div id="app"><div class="spin" role="status" aria-label="Carregando"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const SB_URL = 'https://exfyhevmtpuxnmaifcuw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4ZnloZXZtdHB1eG5tYWlmY3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwNTc5MzksImV4cCI6MjEwODYzMzkzOX0.KS56ZtUqoK3PB0iYlI36Tt-mFAiAKcEErSZ_t0F5KzE';
+const NOME = { S: 'Sérgio', V: 'Victoria' };
+
+/* ---------- utilidades ---------- */
+const $app = document.getElementById('app');
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2 = n => Math.round((Number(n)||0) * 100) / 100;
+function brl(n, cents){
+  n = r2(n);
+  const temCent = cents || Math.round(Math.abs(n)*100) % 100 !== 0;
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: temCent ? 2 : 0, maximumFractionDigits: 2 });
+}
+function parseValor(s){
+  s = String(s||'').replace(/[^\d,.-]/g,'');
+  if (s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,'');
+  const n = parseFloat(s); return isFinite(n) ? r2(n) : 0;
+}
+function hojeISO(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+function dataObj(iso){ const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); }
+function diasEntre(a,b){ return Math.round((dataObj(b) - dataObj(a)) / 86400000); }
+function fmtDia(iso){ const d = dataObj(iso); return d.getDate() + ' ' + MESES[d.getMonth()]; }
+function fmtPeriodo(v){
+  if (!v.inicio) return '';
+  const a = dataObj(v.inicio), b = v.fim ? dataObj(v.fim) : null;
+  if (!b) return fmtDia(v.inicio) + ' ' + a.getFullYear();
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear())
+    return a.getDate() + ' – ' + b.getDate() + ' ' + MESES[b.getMonth()] + ' ' + b.getFullYear();
+  return fmtDia(v.inicio) + ' – ' + fmtDia(v.fim) + ' ' + b.getFullYear();
+}
+function fmtGrupo(iso){
+  const h = hojeISO(), dd = diasEntre(iso, h);
+  if (dd === 0) return 'Hoje · ' + fmtDia(iso);
+  if (dd === 1) return 'Ontem · ' + fmtDia(iso);
+  return SEMANA[dataObj(iso).getDay()] + ' · ' + fmtDia(iso);
+}
+function toast(msg, ms){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms || 2600);
+}
+
+/* ---------- ícones ---------- */
+const sv = (p, w=26, sw=1.5) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC = {
+  mala: '<rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 12h16"/>',
+  mais: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  troca: '<path d="M7 7h13l-4-4M17 17H4l4 4"/>',
+  ajuste: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  voltar: '<path d="M15 18l-6-6 6-6"/>',
+  seta: '<path d="M9 6l6 6-6 6"/>',
+  para: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  cima: '<path d="M5 15l7-7 7 7"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+  aviso: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  comida: '<path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7M17 3c-2 2-2 6 0 8v10"/>',
+  transporte: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l1.5-4M16 21l-1.5-4"/>',
+  hospedagem: '<path d="M3 19V6M3 14h18v5M21 14a3 3 0 0 0-3-3h-7v3"/><circle cx="7" cy="11" r="1.5"/>',
+  passeios: '<path d="M4 9l8-5 8 5v2H4z"/><path d="M6 11v7M10 11v7M14 11v7M18 11v7M3 20h18"/>',
+  compras: '<path d="M5 8h14l-1 13H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  outros: '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'
+};
+const CATS = [
+  { id:'comida', nome:'Comida', curto:'Comida' },
+  { id:'transporte', nome:'Transporte', curto:'Transporte' },
+  { id:'hospedagem', nome:'Hospedagem', curto:'Hotel' },
+  { id:'passeios', nome:'Passeios', curto:'Passeios' },
+  { id:'compras', nome:'Compras', curto:'Compras' },
+  { id:'outros', nome:'Outros', curto:'Outros' }
+];
+const catNome = id => (CATS.find(c => c.id === id) || CATS[5]).nome;
+
+/* ---------- dados ---------- */
+let chave = store.get('vd_chave');
+let D = { viagens: [], gastos: [], acertos: [] };
+let carregado = false;
+let eu = store.get('vd_eu');
+
+async function rpc(fn, args){
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ p_chave: chave }, args || {}))
+  });
+  const txt = await r.text();
+  let body = null; try { body = txt ? JSON.parse(txt) : null; } catch(e){}
+  if (!r.ok) { const e = new Error((body && body.message) || 'Erro ao falar com o servidor'); e.status = r.status; e.code = body && body.code; throw e; }
+  return body;
+}
+async function carregar(silencioso){
+  try {
+    const novo = await rpc('vd_dados');
+    const mudou = JSON.stringify(novo) !== JSON.stringify(D);
+    D = novo; carregado = true;
+    if (mudou || !silencioso) render();
+  } catch(e) {
+    if (e.code === '28000') { chave = null; store.set('vd_chave', null); render(); return; }
+    if (!silencioso) { carregado = true; render(); toast('Sem conexão. Tentando de novo…'); }
+  }
+}
+
+function viagem(id){ return D.viagens.find(v => v.id === id); }
+function gastosDe(id){ return D.gastos.filter(g => g.viagem_id === id); }
+function parteS(g){ return g.divisao === 'metade' ? 0.5 : g.divisao === 'pagador' ? (g.pagou === 'S' ? 1 : 0) : Number(g.parte_s); }
+function resumo(id){
+  const gs = gastosDe(id);
+  let total = 0, pagoS = 0, pagoV = 0, devidoS = 0;
+  const cat = {}; CATS.forEach(c => cat[c.id] = 0);
+  gs.forEach(g => {
+    const v = Number(g.valor); total += v;
+    if (g.pagou === 'S') pagoS += v; else pagoV += v;
+    devidoS += v * parteS(g);
+    cat[g.categoria] = (cat[g.categoria] || 0) + v;
+  });
+  const acs = D.acertos.filter(a => a.viagem_id === id);
+  let saldoS = pagoS - devidoS; // >0: Victoria deve ao Sérgio
+  acs.forEach(a => { saldoS += a.de === 'V' ? -Number(a.valor) : Number(a.valor); });
+  saldoS = r2(saldoS);
+  return { gs, total: r2(total), pagoS: r2(pagoS), pagoV: r2(pagoV), parteS: r2(devidoS), parteV: r2(total - devidoS), saldoS, cat, acs };
+}
+function status(v){
+  const h = hojeISO();
+  if (v.inicio && v.inicio > h) return 'plan';
+  if (v.inicio && (!v.fim || v.fim >= h)) return 'now';
+  const r = resumo(v.id);
+  return (r.gs.length && Math.abs(r.saldoS) < 0.01) ? 'ok' : 'end';
+}
+const STATUS_TXT = { now:'Em andamento', plan:'Planejada', ok:'Acertada', end:'Encerrada' };
+function idAtual(){
+  const salvo = store.get('vd_atual');
+  if (salvo && viagem(salvo)) return salvo;
+  const now = D.viagens.find(v => status(v) === 'now'); if (now) return now.id;
+  const plan = D.viagens.filter(v => status(v) === 'plan').sort((a,b) => a.inicio < b.inicio ? -1 : 1)[0]; if (plan) return plan.id;
+  return D.viagens[0] ? D.viagens[0].id : null;
+}
+function destaque(){
+  const now = D.viagens.find(v => status(v) === 'now'); if (now) return now;
+  const plan = D.viagens.filter(v => status(v) === 'plan').sort((a,b) => a.inicio < b.inicio ? -1 : 1)[0];
+  return plan || null;
+}
+function alertaDe(v, r){
+  if (!v.alerta_ligado || !(Number(v.limite) > 0)) return null;
+  const pct = r.total / Number(v.limite) * 100;
+  if (pct >= 100) return `Vocês passaram do limite de ${esc(v.nome)}: ${brl(r.total)} de ${brl(v.limite)}.`;
+  if (pct >= v.alerta_pct) return `Atenção: já usaram ${Math.floor(pct)}% do limite de ${esc(v.nome)}. Restam ${brl(Number(v.limite) - r.total)}.`;
+  return null;
+}
+
+/* ---------- peças de tela ---------- */
+function tabbar(on){
+  const a = idAtual();
+  const t = (href, key, ic, txt) => `<a href="${href}" class="${on===key?'on':''}" ${on===key?'aria-current="page"':''}>${sv(IC[ic])}${txt}</a>`;
+  return `<nav class="tabbar" aria-label="Navegação">
+    ${t('#/', 'viagens', 'mala', 'Viagens')}
+    ${t(a ? '#/novo/'+a : '#/nova-viagem', 'novo', 'mais', 'Lançar')}
+    ${t(a ? '#/acerto/'+a : '#/nova-viagem', 'acerto', 'troca', 'Acerto')}
+    ${t(a ? '#/limite/'+a : '#/nova-viagem', 'limite', 'ajuste', 'Limite')}
+    <a href="#/nos" class="${on==='nos'?'on':''}"><span class="av">SV</span>Nós</a>
+  </nav>`;
+}
+function barraPessoas(r, limite){
+  const base = Math.max(Number(limite)||0, r.total) || 1;
+  return `<div class="bar"><span style="width:${r.pagoS/base*100}%;background:var(--s)"></span><span style="width:${r.pagoV/base*100}%;background:var(--v)"></span></div>`;
+}
+function linhaGasto(g){
+  return `<a class="row" href="#/gasto/${g.id}" style="text-decoration:none;color:inherit">
+    <span class="dot ${g.pagou}"></span>
+    <span style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.descricao || catNome(g.categoria))}</span>
+    <span class="small muted">${catNome(g.categoria)} · ${NOME[g.pagou]} · ${g.divisao==='metade'?'metade cada':g.divisao==='pagador'?'só de quem pagou':'dividido '+Math.round(parteS(g)*100)+'/'+(100-Math.round(parteS(g)*100))}</span></span>
+    <span class="money" style="font-weight:600">${brl(g.valor)}</span></a>`;
+}
+
+/* ---------- telas ---------- */
+function telaEntrar(){
+  $app.innerHTML = `
+  <header class="hd-sky" style="padding-bottom:80px">
+    <h1 class="h-light">Viagens a Dois</h1>
+    <p style="margin:6px 0 0">Gastos de viagem do Sérgio e da Victoria</p>
+  </header>
+  <section class="pad"><div class="card lift" style="padding:20px">
+    <form id="f-entrar">
+      <label class="inp-lbl" for="cod" style="margin-top:0">Código do casal</label>
+      <input class="inp" id="cod" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cole aqui o código">
+      <p class="small muted" style="margin:10px 0 16px">Abra o link que vocês receberam ou cole o código. Ele fica salvo neste celular.</p>
+      <button class="btn btn-green" type="submit">Entrar</button>
+    </form>
+  </div></section>`;
+  document.getElementById('f-entrar').onsubmit = async ev => {
+    ev.preventDefault();
+    const c = document.getElementById('cod').value.trim().replace(/^.*#k=/, '');
+    if (!c) return;
+    chave = c;
+    try { await rpc('vd_dados'); store.set('vd_chave', c); location.hash = '#/'; carregar(); }
+    catch(e){ chave = null; toast(e.code === '28000' ? 'Código não encontrado' : 'Sem conexão'); }
+  };
+}
+
+function telaViagens(){
+  const dest = destaque();
+  const outras = D.viagens.filter(v => !dest || v.id !== dest.id);
+  let sub = 'Nenhuma viagem em andamento';
+  if (dest && status(dest) === 'now') {
+    const dia = diasEntre(dest.inicio, hojeISO()) + 1, tot = dest.fim ? diasEntre(dest.inicio, dest.fim) + 1 : null;
+    sub = `Vocês estão em ${esc(dest.nome)} · dia ${dia}${tot ? ' de ' + tot : ''}`;
+  } else if (dest) {
+    const n = diasEntre(hojeISO(), dest.inicio);
+    sub = `${esc(dest.nome)} em ${n} dia${n===1?'':'s'}`;
+  }
+  let cartao;
+  if (dest) {
+    const r = resumo(dest.id), lim = Number(dest.limite)||0;
+    const pct = lim ? Math.min(100, r.total/lim*100) : 0;
+    const al = alertaDe(dest, r);
+    cartao = `<a href="#/v/${dest.id}" class="card lift" style="display:flex;flex-direction:column;gap:14px;padding:18px 20px;text-decoration:none;color:inherit">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13px">Gasto em ${esc(dest.nome)}</span><span class="money" style="font-size:22px;font-weight:700">${brl(r.total)}</span><span class="small" style="color:var(--blue);text-decoration:underline">Ver gastos</span></div>
+        <div style="display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right"><span style="font-size:13px">${lim ? (r.total > lim ? 'Passaram do limite' : 'Ainda podem gastar') : 'Limite'}</span><span class="money" style="font-size:22px;font-weight:700">${lim ? brl(Math.abs(lim - r.total)) : '—'}</span><span class="small" style="color:var(--blue);text-decoration:underline">${lim ? 'Ver limite' : 'Definir limite'}</span></div>
+      </div>
+      ${lim ? `<div style="display:flex;flex-direction:column;gap:6px"><div class="bar" style="height:10px"><span style="width:${pct}%;background:${pct>=100?'var(--warn)':'var(--green)'};border-radius:999px"></span></div><span class="small muted">${Math.round(r.total/lim*100)}% de ${brl(lim)}</span></div>` : ''}
+      <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:6px"><span class="dot S"></span>Sérgio ${brl(r.pagoS)}</span><span style="display:flex;align-items:center;gap:6px"><span class="dot V"></span>Victoria ${brl(r.pagoV)}</span></div>
+    </a>${al ? `<div class="alert">${sv(IC.aviso,20,1.8)}<span>${al}</span></div>` : ''}`;
+  } else {
+    cartao = `<div class="card lift" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:17px">${D.viagens.length ? 'Nenhuma viagem agora. Que tal planejar a próxima?' : 'Crie a primeira viagem de vocês'}</span>
+      <a class="btn btn-green" href="#/nova-viagem">Nova viagem</a></div>`;
+  }
+  const cards = outras.map(v => {
+    const r = resumo(v.id), st = status(v);
+    return `<a class="trip-card" href="#/v/${v.id}${st==='ok'||st==='end'?'/categorias':''}">
+      <span style="display:flex;justify-content:space-between;align-items:flex-start;color:#1D9BC9">${sv(IC.pin,28)}<span class="tag ${st}">${STATUS_TXT[st]}</span></span>
+      <span style="font-size:16px;font-weight:600">${esc(v.nome)}</span>
+      <span class="money" style="font-size:13px">${brl(r.total)}${Number(v.limite) ? ' de ' + brl(v.limite) : ''}</span>
+      <span style="font-size:13px;color:var(--blue)">${st==='plan' ? 'Ver planejamento' : 'Ver categorias'}</span></a>`;
+  }).join('');
+  $app.innerHTML = `
+  <header class="hd-sky">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="display:flex"><span class="av-c">S</span><span class="av-c" style="margin-left:-12px">V</span></div>
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <h1 style="margin:0;font-size:19px;font-weight:300">Olá, <strong style="font-weight:600">${eu ? NOME[eu] : 'Sérgio e Victoria'}</strong></h1>
+        <span style="font-size:13px">${sub}</span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px">
+      <span style="font-size:14px">Viagens juntos: <strong>${D.viagens.length}</strong></span>
+      <a class="btn-line" href="#/nova-viagem" style="color:var(--ink);text-decoration:none">Nova viagem ${sv(IC.plus,18,1.6)}</a>
+    </div>
+  </header>
+  <section class="pad">${cartao}
+    ${outras.length ? `<h2 class="sec-title">Outras viagens</h2><div class="trip-grid">${cards}</div>` : ''}
+  </section>
+  ${tabbar('viagens')}`;
+}
+
+let abaViagem = {};
+function telaViagem(id, abaUrl){
+  const v = viagem(id); if (!v) return naoAchou();
+  store.set('vd_atual', id);
+  const st = status(v);
+  const aba = abaUrl || abaViagem[id] || ((st === 'ok' || st === 'end') ? 'categorias' : 'gastos');
+  const r = resumo(id), lim = Number(v.limite) || 0;
+  let corpo = '';
+  if (aba === 'gastos') {
+    let grupos = '', ult = null;
+    r.gs.forEach(g => { if (g.data !== ult) { ult = g.data; grupos += `<div class="small muted" style="padding:14px 16px 4px;font-weight:600;letter-spacing:.06em;text-transform:uppercase">${fmtGrupo(g.data)}</div>`; } grupos += linhaGasto(g); });
+    corpo = `
+    <div style="display:grid;grid-template-columns:1fr 32px 1fr;align-items:center;padding:18px 12px;border-bottom:1px solid var(--line);text-align:center">
+      <span style="display:flex;flex-direction:column;gap:2px"><span class="big-light money">${brl(r.total)}</span><span class="small muted">Gasto</span></span>
+      <span style="justify-self:center">${sv(IC.para,22,1.8)}</span>
+      <a href="#/limite/${id}" style="display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit"><span class="big-light money">${lim ? brl(lim) : '—'}</span><span class="small muted">Limite</span></a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 12px;border-bottom:1px solid var(--line);text-align:center">
+      <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:var(--s)">Sérgio pagou</span><span class="money" style="font-size:19px">${brl(r.pagoS)}</span></span>
+      <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:var(--v-ink)">Victoria pagou</span><span class="money" style="font-size:19px">${brl(r.pagoV)}</span></span>
+    </div>
+    ${grupos || '<div class="empty">Nenhum gasto ainda. Toque em “Lançar gasto”.</div>'}
+    ${r.gs.length ? `<a class="linkrow" href="#/acerto/${id}" style="border-top:1px solid var(--line)">${frasesSaldo(r)}${sv(IC.seta,20,1.8)}</a>` : ''}`;
+  } else if (aba === 'pessoa') {
+    const bloco = (p) => {
+      const pago = p === 'S' ? r.pagoS : r.pagoV, parte = p === 'S' ? r.parteS : r.parteV;
+      const lista = r.gs.filter(g => g.pagou === p);
+      return `<div style="padding:16px;border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:10px"><span class="av-c" style="width:34px;height:34px;font-size:13px;border-color:${p==='S'?'var(--s)':'var(--v)'};color:${p==='S'?'var(--s)':'var(--v-ink)'}">${p}</span>
+        <span style="flex:1;font-size:17px">${NOME[p]}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px">
+          <span style="display:flex;flex-direction:column"><span class="lbl">Pagou</span><span class="money" style="font-size:20px;font-weight:300">${brl(pago)}</span></span>
+          <span style="display:flex;flex-direction:column"><span class="lbl">Parte ${p==='S'?'dele':'dela'}</span><span class="money" style="font-size:20px;font-weight:300">${brl(parte)}</span></span>
+        </div>
+        <div class="small muted" style="margin-top:8px">${lista.length} gasto${lista.length===1?'':'s'} pago${lista.length===1?'':'s'} por ${p==='S'?'ele':'ela'}</div>
+      </div>`;
+    };
+    corpo = bloco('S') + bloco('V') + `<a class="linkrow" href="#/acerto/${id}">${r.gs.length ? frasesSaldo(r) : 'Acerto de contas'}${sv(IC.seta,20,1.8)}</a>`;
+  } else {
+    const maior = Math.max(...Object.values(r.cat), 0.01);
+    const lc = v.limites_cat || {};
+    const linhas = CATS.filter(c => r.cat[c.id] > 0 || Number(lc[c.id]) > 0).sort((a,b) => r.cat[b.id] - r.cat[a.id]).map(c => {
+      const val = r.cat[c.id], pc = r.total ? Math.round(val / r.total * 100) : 0, l = Number(lc[c.id]) || 0;
+      const passou = l && val > l;
+      return `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="color:var(--blue)">${sv(IC[c.id],20,1.6)}</span>
+          <span style="flex:1">${c.nome}${l ? `<span class="small" style="color:${passou?'var(--warn)':'var(--muted)'}"> · limite ${brl(l)}</span>` : ''}</span>
+          <span class="small muted">${pc}%</span><span class="money" style="min-width:78px;text-align:right;font-weight:600">${brl(val)}</span></div>
+        <div class="bar" style="height:6px;background:#EEEEEE"><span style="width:${val/maior*100}%;background:${passou?'var(--warn)':'var(--blue)'};border-radius:999px"></span></div></div>`;
+    }).join('');
+    corpo = `<div style="padding:16px 16px 8px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="display:flex;flex-direction:column"><span style="font-size:13px">Total gasto</span><span class="money" style="font-size:24px;font-weight:700">${brl(r.total)}</span></span>
+        ${lim ? `<span class="small muted">de ${brl(lim)} · ${Math.round(r.total/lim*100)}%</span>` : ''}</div>
+        ${barraPessoas(r, lim)}
+        <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:6px"><span class="dot S"></span>Sérgio ${brl(r.pagoS)}</span><span style="display:flex;align-items:center;gap:6px"><span class="dot V"></span>Victoria ${brl(r.pagoV)}</span></div>
+      </div>
+      <h3 style="margin:8px 16px 0;font-size:17px;font-weight:500">Gastos por categoria</h3>
+      ${linhas || '<div class="empty">Ainda não há gastos.</div>'}
+      <button class="linkrow" data-aba="gastos" style="border-top:1px solid var(--line);margin-top:6px">Ver todos os ${r.gs.length} gastos${sv(IC.seta,20,1.8)}</button>`;
+  }
+  const al = alertaDe(v, r);
+  $app.innerHTML = `
+  <header class="hd-navy">
+    <a class="back" href="#/" aria-label="Voltar">${sv(IC.voltar,22,1.8)}</a>
+    <a class="hd-right" href="#/limite/${id}" aria-label="Limite e ajustes da viagem">${sv(IC.ajuste,22,1.8)}</a>
+    <h1 class="h-light" style="padding:0 40px">${esc(v.nome)}</h1>
+    <div class="sub">${[v.destino, fmtPeriodo(v)].filter(Boolean).map(esc).join(' · ')}</div>
+    <div style="margin-top:10px"><span class="tag" style="background:rgba(255,255,255,.14);color:#fff">${STATUS_TXT[st]}</span></div>
+  </header>
+  <section class="pad">
+    <div class="card lift" style="overflow:hidden">
+      <div class="band" role="group" aria-label="Visão">
+        <button data-aba="gastos" aria-pressed="${aba==='gastos'}">GASTOS</button>
+        <button data-aba="pessoa" aria-pressed="${aba==='pessoa'}">POR PESSOA</button>
+        <button data-aba="categorias" aria-pressed="${aba==='categorias'}">CATEGORIAS</button>
+      </div>
+      ${corpo}
+    </div>
+    ${al ? `<div class="alert">${sv(IC.aviso,20,1.8)}<span>${al}</span></div>` : ''}
+    <div style="height:76px"></div>
+  </section>
+  <div class="sticky-cta"><a class="btn btn-green" href="#/novo/${id}">Lançar gasto</a></div>
+  ${tabbar('viagens')}`;
+  $app.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { abaViagem[id] = b.dataset.aba; history.replaceState(null, '', '#/v/' + id); telaViagem(id, b.dataset.aba); });
+}
+function frasesSaldo(r){
+  if (Math.abs(r.saldoS) < 0.01) return 'Tudo acertado entre vocês';
+  return r.saldoS > 0 ? `Victoria deve ${brl(r.saldoS)} ao Sérgio` : `Sérgio deve ${brl(-r.saldoS)} à Victoria`;
+}
+
+/* --- novo / editar gasto --- */
+let F = null;
+function telaGasto(viagemId, gastoId){
+  const g = gastoId ? D.gastos.find(x => x.id === gastoId) : null;
+  if (gastoId && !g) return naoAchou();
+  const vid = g ? g.viagem_id : viagemId;
+  if (!viagem(vid)) return naoAchou();
+  const chaveForm = (g ? 'g:' + g.id : 'n:' + vid);
+  if (!F || F.k !== chaveForm) {
+    F = g ? { k: chaveForm, id: g.id, viagem_id: vid, valor: String(g.valor).replace('.', ','), descricao: g.descricao, categoria: g.categoria, pagou: g.pagou, divisao: g.divisao, pct: Math.round(parteS(g)*100), data: g.data }
+          : { k: chaveForm, viagem_id: vid, valor: '', descricao: '', categoria: 'comida', pagou: eu || 'S', divisao: 'metade', pct: 50, data: hojeISO() };
+  }
+  const v = viagem(F.viagem_id);
+  const opcoes = D.viagens.map(x => `<option value="${x.id}" ${x.id===F.viagem_id?'selected':''}>${esc(x.nome)}</option>`).join('');
+  $app.innerHTML = `
+  <header class="hd-navy" style="padding-bottom:110px">
+    <a class="back" href="${g ? '#/v/'+vid : '#/v/'+vid}" aria-label="Fechar">${sv(IC.x,22,1.8)}</a>
+    ${g ? `<div class="sub">${esc(v.nome)}</div>` : `<label for="sel-v" style="position:absolute;width:1px;height:1px;overflow:hidden">Viagem</label><select id="sel-v" class="sel-trip">${opcoes}</select>`}
+    <h1 class="h-light">${g ? 'Editar gasto' : 'Novo gasto'}</h1>
+    <div class="cats" role="group" aria-label="Categoria">
+      ${CATS.map(c => `<button type="button" data-cat="${c.id}" aria-pressed="${F.categoria===c.id}">${sv(IC[c.id],26,1.6)}${c.curto}</button>`).join('')}
+    </div>
+  </header>
+  <section class="pad">
+    <form id="f-gasto" class="card" style="margin-top:-70px;position:relative;overflow:hidden">
+      <div class="band" role="group" aria-label="Divisão">
+        <button type="button" data-div="metade" aria-pressed="${F.divisao==='metade'}">METADE CADA</button>
+        <button type="button" data-div="pagador" aria-pressed="${F.divisao==='pagador'}">SÓ DE QUEM PAGOU</button>
+        <button type="button" data-div="outra" aria-pressed="${F.divisao==='outra'}">OUTRA</button>
+      </div>
+      <div class="field">
+        <label class="lbl" for="in-valor">Valor</label>
+        <input id="in-valor" class="in-big money" inputmode="decimal" placeholder="R$ 0,00" value="${esc(F.valor ? 'R$ ' + F.valor : '')}" autocomplete="off">
+        <span class="small muted" id="ajuda">${ajudaDivisao()}</span>
+      </div>
+      ${F.divisao === 'outra' ? `<div class="field" style="align-items:stretch">
+        <label class="lbl" for="in-pct" style="text-align:center">Parte do Sérgio: <strong id="pct-txt">${F.pct}%</strong> · Victoria: <strong id="pct-txt2">${100-F.pct}%</strong></label>
+        <input id="in-pct" type="range" min="0" max="100" step="5" value="${F.pct}">
+      </div>` : ''}
+      <div class="field">
+        <label class="lbl" for="in-desc">Descrição</label>
+        <input id="in-desc" class="in-mid" placeholder="Ex.: Jantar, Uber, museu" value="${esc(F.descricao)}" autocomplete="off">
+      </div>
+      <div class="payers" role="group" aria-label="Quem pagou">
+        <button type="button" class="S" data-pagou="S" aria-pressed="${F.pagou==='S'}">Sérgio pagou</button>
+        <button type="button" class="V" data-pagou="V" aria-pressed="${F.pagou==='V'}">Victoria pagou</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;align-items:center;padding:12px 20px">
+        <label class="lbl" for="in-data">Data</label>
+        <input id="in-data" type="date" value="${F.data}" style="border:0;background:transparent;padding:0">
+      </div>
+      <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-green" type="submit" id="bt-salvar">${g ? 'Salvar' : 'Lançar gasto'}</button>
+        ${g ? '<button class="btn btn-ghost" type="button" id="bt-excluir">Excluir gasto</button>' : ''}
+      </div>
+    </form>
+  </section>
+  ${tabbar(g ? 'viagens' : 'novo')}`;
+
+  const iv = document.getElementById('in-valor');
+  iv.oninput = () => { F.valor = iv.value.replace(/[^\d,.]/g,''); document.getElementById('ajuda').textContent = ajudaDivisao(); };
+  iv.onfocus = () => { if (!iv.value) iv.value = ''; };
+  document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
+  document.getElementById('in-data').onchange = e => F.data = e.target.value || hojeISO();
+  const ip = document.getElementById('in-pct');
+  if (ip) ip.oninput = () => { F.pct = Number(ip.value); document.getElementById('pct-txt').textContent = F.pct + '%'; document.getElementById('pct-txt2').textContent = (100-F.pct) + '%'; document.getElementById('ajuda').textContent = ajudaDivisao(); };
+  const sel = document.getElementById('sel-v');
+  if (sel) sel.onchange = () => { F.viagem_id = sel.value; F.k = 'n:' + sel.value; store.set('vd_atual', sel.value); history.replaceState(null,'','#/novo/' + sel.value); };
+  $app.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { F.categoria = b.dataset.cat; $app.querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  $app.querySelectorAll('[data-pagou]').forEach(b => b.onclick = () => { F.pagou = b.dataset.pagou; $app.querySelectorAll('[data-pagou]').forEach(x => x.setAttribute('aria-pressed', x === b)); document.getElementById('ajuda').textContent = ajudaDivisao(); });
+  $app.querySelectorAll('[data-div]').forEach(b => b.onclick = () => { F.divisao = b.dataset.div; telaGasto(viagemId, gastoId); });
+  document.getElementById('f-gasto').onsubmit = salvarGasto;
+  const bx = document.getElementById('bt-excluir');
+  if (bx) bx.onclick = async () => {
+    if (!confirm('Excluir este gasto?')) return;
+    try { await rpc('vd_excluir', { p_tipo: 'gasto', p_id: F.id }); F = null; toast('Gasto excluído'); location.hash = '#/v/' + vid; carregar(); }
+    catch(e){ toast(e.message); }
+  };
+}
+function ajudaDivisao(){
+  const val = parseValor(F.valor);
+  if (F.divisao === 'metade') return val ? `${brl(val/2, true)} para cada` : 'Dividido meio a meio';
+  if (F.divisao === 'pagador') return `Fica todo na conta ${F.pagou==='S'?'do Sérgio':'da Victoria'}`;
+  return val ? `Sérgio ${brl(val*F.pct/100, true)} · Victoria ${brl(val*(100-F.pct)/100, true)}` : 'Escolha a parte de cada um';
+}
+async function salvarGasto(ev){
+  ev.preventDefault();
+  const valor = parseValor(F.valor);
+  if (!(valor > 0)) { toast('Digite o valor do gasto'); document.getElementById('in-valor').focus(); return; }
+  const v = viagem(F.viagem_id);
+  const antes = resumo(v.id).total;
+  const bt = document.getElementById('bt-salvar'); bt.disabled = true; bt.textContent = 'Salvando…';
+  const p = { viagem_id: F.viagem_id, valor, descricao: F.descricao.trim(), categoria: F.categoria, pagou: F.pagou, divisao: F.divisao, parte_s: F.divisao === 'outra' ? F.pct/100 : (F.divisao === 'metade' ? 0.5 : (F.pagou === 'S' ? 1 : 0)), data: F.data };
+  if (F.id) p.id = F.id;
+  try {
+    await rpc('vd_salvar_gasto', { p });
+    const eraEdicao = !!F.id; F = null;
+    await carregar(true);
+    const depois = resumo(v.id).total, lim = Number(v.limite) || 0;
+    let msg = eraEdicao ? 'Gasto atualizado' : 'Gasto lançado';
+    if (v.alerta_ligado && lim) {
+      const pa = antes/lim*100, pd = depois/lim*100;
+      if (pd >= 100 && pa < 100) msg = `Atenção: vocês passaram do limite de ${v.nome}`;
+      else if (pd >= v.alerta_pct && pa < v.alerta_pct) msg = `Atenção: chegaram a ${Math.floor(pd)}% do limite de ${v.nome}`;
+    }
+    location.hash = '#/v/' + v.id; toast(msg, 3600);
+  } catch(e) { bt.disabled = false; bt.textContent = 'Tentar de novo'; toast(e.message); }
+}
+
+/* --- acerto --- */
+function telaAcerto(id){
+  const v = viagem(id); if (!v) return naoAchou();
+  store.set('vd_atual', id);
+  const r = resumo(id);
+  const zerado = Math.abs(r.saldoS) < 0.01;
+  const deve = r.saldoS > 0 ? 'V' : 'S', recebe = deve === 'V' ? 'S' : 'V', val = Math.abs(r.saldoS);
+  const hist = r.acs.map(a => `<div class="row" style="padding:12px 0"><span class="dot ${a.de}"></span><span style="flex:1">${NOME[a.de]} pagou ${brl(a.valor)} ${a.de==='V'?'ao Sérgio':'à Victoria'}<br><span class="small muted">${fmtDia(a.em.slice(0,10))}</span></span>
+    <button class="chip" data-desfaz="${a.id}" style="height:34px">Desfazer</button></div>`).join('');
+  $app.innerHTML = `
+  <header class="hd-sky">
+    <a class="back" href="#/v/${id}" aria-label="Voltar">${sv(IC.voltar,22,1.8)}</a>
+    <h1 class="h-light">Acerto de contas</h1>
+    <span style="font-size:14px">${esc(v.nome)} · para ficar como combinaram</span>
+  </header>
+  <section class="pad">
+    <div class="card lift" style="padding:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      ${['S','V'].map(p => `<div style="display:flex;gap:10px"><span class="av-c" style="width:34px;height:34px;font-size:13px;border-color:${p==='S'?'var(--s)':'var(--v)'};color:${p==='S'?'var(--s)':'var(--v-ink)'}">${p}</span>
+        <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13px">${NOME[p]} pagou</span><span class="money" style="font-size:20px;font-weight:700">${brl(p==='S'?r.pagoS:r.pagoV)}</span></span></div>`).join('')}
+    </div>
+    <div class="card-flat" style="margin-top:14px;padding:20px 18px;display:flex;flex-direction:column;gap:14px">
+      ${zerado ? `<span style="font-size:17px">Tudo certo! Ninguém deve nada nesta viagem.</span>` :
+        `<span style="font-size:17px">Para acertar, <strong>${NOME[deve]}</strong> paga ${recebe==='S'?'ao':'à'} <strong>${NOME[recebe]}</strong></span>
+         <span class="money" style="font-size:40px;font-weight:300;line-height:1">${brl(val, true)}</span>`}
+      <div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #EFEFEF;font-size:14px"><span class="muted">Total da viagem</span><span class="money">${brl(r.total)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #EFEFEF;font-size:14px"><span class="muted">Parte do Sérgio</span><span class="money">${brl(r.parteS)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #EFEFEF;font-size:14px"><span class="muted">Parte da Victoria</span><span class="money">${brl(r.parteV)}</span></div>
+        ${r.acs.length ? `<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #EFEFEF;font-size:14px"><span class="muted">Acertos já feitos</span><span class="money">${r.acs.length}</span></div>` : ''}
+      </div>
+    </div>
+    ${zerado ? '' : `<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+      <button class="btn btn-out" id="bt-copiar">Copiar valor para o Pix</button>
+      <button class="btn btn-green" id="bt-acertar">Marcar como acertado</button></div>`}
+    ${hist ? `<h2 class="sec-title">Acertos feitos</h2><div class="card-flat" style="padding:0 16px">${hist}</div>` : ''}
+  </section>
+  ${tabbar('acerto')}`;
+  const bc = document.getElementById('bt-copiar');
+  if (bc) bc.onclick = async () => { try { await navigator.clipboard.writeText(val.toFixed(2).replace('.', ',')); toast('Valor copiado'); } catch(e){ toast(val.toFixed(2).replace('.', ',')); } };
+  const ba = document.getElementById('bt-acertar');
+  if (ba) ba.onclick = async () => {
+    if (!confirm(`Confirmar que ${NOME[deve]} pagou ${brl(val, true)} ${recebe==='S'?'ao':'à'} ${NOME[recebe]}?`)) return;
+    ba.disabled = true;
+    try { await rpc('vd_acertar', { p_viagem: id, p_de: deve, p_valor: r2(val) }); await carregar(); toast('Contas acertadas'); }
+    catch(e){ ba.disabled = false; toast(e.message); }
+  };
+  $app.querySelectorAll('[data-desfaz]').forEach(b => b.onclick = async () => {
+    if (!confirm('Desfazer este acerto?')) return;
+    try { await rpc('vd_excluir', { p_tipo: 'acerto', p_id: b.dataset.desfaz }); await carregar(); toast('Acerto desfeito'); } catch(e){ toast(e.message); }
+  });
+}
+
+/* --- limite e alertas --- */
+let abertos = { cat: true, alertas: true, viagem: false };
+function telaLimite(id){
+  const v = viagem(id); if (!v) return naoAchou();
+  store.set('vd_atual', id);
+  const r = resumo(id), lc = v.limites_cat || {};
+  const catRows = CATS.map(c => {
+    const val = r.cat[c.id] || 0, l = Number(lc[c.id]) || 0, pc = l ? Math.min(100, val/l*100) : 0;
+    const quente = l && val/l*100 >= v.alerta_pct;
+    return `<button class="catlim" data-lim="${c.id}">
+      <span style="display:flex;justify-content:space-between;width:100%;font-size:15px;gap:8px"><span>${c.nome}</span>
+      <span class="money" style="${quente?'color:var(--warn);font-weight:600':''}">${brl(val)} / ${l ? brl(l) : '<span style="color:var(--blue)">definir</span>'}</span></span>
+      <span class="bar" style="height:6px;width:100%;background:#E2E2E2"><span style="width:${pc}%;background:${quente?'var(--warn)':'var(--green)'};border-radius:999px"></span></span></button>`;
+  }).join('');
+  $app.innerHTML = `
+  <header style="padding:calc(env(safe-area-inset-top,0px) + 20px) 22px 0;display:flex;flex-direction:column;gap:4px;position:relative">
+    <a class="back" href="#/v/${id}" aria-label="Voltar" style="position:static;margin-left:-12px">${sv(IC.voltar,22,1.8)}</a>
+    <h1 class="h-light" style="font-size:32px">Limite e alertas</h1>
+    <span class="muted" style="font-size:14px">${esc(v.nome)}${v.inicio ? ' · ' + esc(fmtPeriodo(v)) : ''}</span>
+  </header>
+  <section style="padding:18px 22px 0;display:flex;flex-direction:column;gap:18px">
+    <div class="box"><span style="font-size:16px">Limite total</span>
+      <button class="pill" id="bt-lim">${Number(v.limite) ? brl(v.limite) : 'Definir'} ${sv(IC.seta,18,2)}</button></div>
+    <section>
+      <button class="acc" data-acc="cat" aria-expanded="${abertos.cat}">Por categoria ${sv(IC.cima,24,1.5)}</button>
+      ${abertos.cat ? `<div>${catRows}<p class="small muted" style="margin:8px 0 0">Toque numa categoria para definir o limite dela.</p></div>` : ''}
+    </section>
+    <section>
+      <button class="acc" data-acc="alertas" aria-expanded="${abertos.alertas}">Alertas ${sv(IC.cima,24,1.5)}</button>
+      ${abertos.alertas ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:12px"><span>Avisar ao chegar em ${v.alerta_pct}%</span>
+        <button class="sw" id="sw-alerta" aria-pressed="${v.alerta_ligado}" aria-label="Avisar ao chegar em ${v.alerta_pct}%"></button></div>
+      <div class="chips" role="group" aria-label="Quando avisar">${[70,80,90].map(n => `<button class="chip" data-pct="${n}" aria-pressed="${v.alerta_pct===n}">${n}%</button>`).join('')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:12px"><span>Mostrar o aviso para os dois<br><span class="small muted">Aparece no app do Sérgio e da Victoria</span></span>
+        <button class="sw" id="sw-ambos" aria-pressed="${v.alerta_ambos}" aria-label="Mostrar o aviso para os dois"></button></div>` : ''}
+    </section>
+    <section>
+      <button class="acc" data-acc="viagem" aria-expanded="${abertos.viagem}">Dados da viagem ${sv(IC.cima,24,1.5)}</button>
+      ${abertos.viagem ? formViagem(v) : ''}
+    </section>
+  </section>
+  ${tabbar('limite')}`;
+  $app.querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { abertos[b.dataset.acc] = !abertos[b.dataset.acc]; telaLimite(id); });
+  document.getElementById('bt-lim').onclick = async () => {
+    const n = await pedirValor('Limite total da viagem', v.limite); if (n == null) return;
+    salvarViagem({ id, limite: n }, 'Limite salvo');
+  };
+  $app.querySelectorAll('[data-lim]').forEach(b => b.onclick = async () => {
+    const c = b.dataset.lim, n = await pedirValor('Limite de ' + catNome(c), lc[c] || 0, true); if (n == null) return;
+    const novo = Object.assign({}, lc); if (n > 0) novo[c] = n; else delete novo[c];
+    salvarViagem({ id, limites_cat: novo }, 'Limite salvo');
+  });
+  const sa = document.getElementById('sw-alerta'); if (sa) sa.onclick = () => salvarViagem({ id, alerta_ligado: !v.alerta_ligado });
+  const sb = document.getElementById('sw-ambos'); if (sb) sb.onclick = () => salvarViagem({ id, alerta_ambos: !v.alerta_ambos });
+  $app.querySelectorAll('[data-pct]').forEach(b => b.onclick = () => salvarViagem({ id, alerta_pct: Number(b.dataset.pct) }));
+  ligarFormViagem(v);
+}
+async function salvarViagem(p, msg){
+  try { const nid = await rpc('vd_salvar_viagem', { p }); await carregar(); if (msg) toast(msg); return nid; }
+  catch(e){ toast(e.message); return null; }
+}
+function formViagem(v){
+  v = v || {};
+  return `<form id="f-viagem" style="display:flex;flex-direction:column">
+    <label class="inp-lbl" for="fv-nome">Nome da viagem</label><input class="inp" id="fv-nome" required placeholder="Ex.: Argentina 2025" value="${esc(v.nome)}">
+    <label class="inp-lbl" for="fv-dest">Destino</label><input class="inp" id="fv-dest" placeholder="Ex.: Buenos Aires e Mendoza" value="${esc(v.destino)}">
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <span><label class="inp-lbl" for="fv-ini">Ida</label><input class="inp" id="fv-ini" type="date" value="${v.inicio||''}" style="text-align:left"></span>
+      <span><label class="inp-lbl" for="fv-fim">Volta</label><input class="inp" id="fv-fim" type="date" value="${v.fim||''}" style="text-align:left"></span>
+    </div>
+    ${v.id ? '' : `<label class="inp-lbl" for="fv-lim">Limite de gastos (opcional)</label><input class="inp" id="fv-lim" inputmode="decimal" placeholder="R$ 0,00">`}
+    <button class="btn btn-green" type="submit" style="margin-top:18px">${v.id ? 'Salvar dados' : 'Criar viagem'}</button>
+    ${v.id ? '<button class="btn btn-ghost" type="button" id="fv-excluir">Excluir viagem</button>' : ''}
+  </form>`;
+}
+function ligarFormViagem(v){
+  const f = document.getElementById('f-viagem'); if (!f) return;
+  f.onsubmit = async ev => {
+    ev.preventDefault();
+    const p = { nome: document.getElementById('fv-nome').value.trim(), destino: document.getElementById('fv-dest').value.trim(),
+                inicio: document.getElementById('fv-ini').value, fim: document.getElementById('fv-fim').value };
+    if (!p.nome) return;
+    if (p.inicio && p.fim && p.fim < p.inicio) { toast('A volta é antes da ida'); return; }
+    if (v && v.id) { p.id = v.id; salvarViagem(p, 'Viagem salva'); return; }
+    p.limite = parseValor((document.getElementById('fv-lim')||{}).value);
+    const nid = await salvarViagem(p, 'Viagem criada');
+    if (nid) { store.set('vd_atual', nid); location.hash = '#/v/' + nid; }
+  };
+  const bx = document.getElementById('fv-excluir');
+  if (bx) bx.onclick = async () => {
+    if (!confirm(`Excluir a viagem ${v.nome} e todos os gastos dela?`)) return;
+    try { await rpc('vd_excluir', { p_tipo: 'viagem', p_id: v.id }); store.set('vd_atual', null); location.hash = '#/'; await carregar(); toast('Viagem excluída'); }
+    catch(e){ toast(e.message); }
+  };
+}
+function telaNovaViagem(){
+  $app.innerHTML = `
+  <header class="hd-sky" style="padding-bottom:24px">
+    <a class="back" href="#/" aria-label="Voltar">${sv(IC.voltar,22,1.8)}</a>
+    <h1 class="h-light">Nova viagem</h1>
+    <span style="font-size:14px">Pode ser uma viagem futura ou uma que já aconteceu</span>
+  </header>
+  <section style="padding:4px 20px 20px">${formViagem(null)}</section>
+  ${tabbar('viagens')}`;
+  ligarFormViagem(null);
+}
+
+/* --- nós --- */
+function telaNos(){
+  const link = location.origin + location.pathname + '#k=' + chave;
+  $app.innerHTML = `
+  <header style="padding:calc(env(safe-area-inset-top,0px) + 40px) 22px 0"><h1 class="h-light" style="font-size:32px">Nós</h1></header>
+  <section style="padding:18px 22px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <div style="font-size:18px;font-weight:600;padding-bottom:10px;border-bottom:1px solid #9A9A9A">Quem usa este celular?</div>
+      <p class="small muted" style="margin:10px 0">Quem pagou já vem marcado com o seu nome quando você lança um gasto.</p>
+      <div class="payers" style="padding:0;border:0" role="group" aria-label="Quem usa este celular">
+        <button class="S" data-eu="S" aria-pressed="${eu==='S'}" style="border-color:${eu==='S'?'':'var(--line2)'}">Sou o Sérgio</button>
+        <button class="V" data-eu="V" aria-pressed="${eu==='V'}" style="border-color:${eu==='V'?'':'var(--line2)'}">Sou a Victoria</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:18px;font-weight:600;padding-bottom:10px;border-bottom:1px solid #9A9A9A">Usar no outro celular</div>
+      <p class="small muted" style="margin:10px 0">Mande este link para o outro abrir. Quem tiver o link vê e lança gastos, então mande só entre vocês.</p>
+      <button class="btn btn-out" id="bt-link">Compartilhar link do casal</button>
+    </div>
+    <div>
+      <div style="font-size:18px;font-weight:600;padding-bottom:10px;border-bottom:1px solid #9A9A9A">Na tela de início</div>
+      <p class="small muted" style="margin:10px 0 0">iPhone: no Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”. Android: no Chrome, toque no menu ⋮ e em “Adicionar à tela inicial”. Se o app pedir o código depois de instalado, cole o link do casal.</p>
+    </div>
+    <button class="btn btn-ghost" id="bt-sair">Sair deste celular</button>
+  </section>
+  ${tabbar('nos')}`;
+  $app.querySelectorAll('[data-eu]').forEach(b => b.onclick = () => { eu = b.dataset.eu; store.set('vd_eu', eu); telaNos(); toast('Pronto, ' + NOME[eu]); });
+  document.getElementById('bt-link').onclick = async () => {
+    try { if (navigator.share) { await navigator.share({ title: 'Viagens a Dois', text: 'Nosso app de gastos de viagem', url: link }); return; } } catch(e){ if (e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(link); toast('Link copiado'); } catch(e){ prompt('Copie o link:', link); }
+  };
+  document.getElementById('bt-sair').onclick = () => { if (!confirm('Sair deste celular? Vai precisar do link do casal para entrar de novo.')) return; store.set('vd_chave', null); chave = null; render(); };
+}
+
+/* --- folha para digitar valor --- */
+function pedirValor(titulo, atual, permiteZero){
+  return new Promise(res => {
+    const w = document.createElement('div'); w.className = 'veil';
+    w.innerHTML = `<form class="sheet" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><span class="grab"></span><h3>${esc(titulo)}</h3>
+      <input class="inp money" id="pv" inputmode="decimal" style="font-size:26px;height:60px" value="${Number(atual) ? 'R$ ' + String(atual).replace('.', ',') : ''}" placeholder="R$ 0,00">
+      ${permiteZero ? '<p class="small muted" style="margin:0">Deixe vazio para tirar o limite.</p>' : ''}
+      <button class="btn btn-green" type="submit">Salvar</button><button class="btn btn-ghost" type="button" id="pv-c" style="color:var(--muted)">Cancelar</button></form>`;
+    document.body.appendChild(w);
+    const i = w.querySelector('#pv'); setTimeout(() => i.focus(), 50);
+    const fim = val => { w.remove(); res(val); };
+    w.onclick = e => { if (e.target === w) fim(null); };
+    w.querySelector('#pv-c').onclick = () => fim(null);
+    w.querySelector('form').onsubmit = e => { e.preventDefault(); fim(parseValor(i.value)); };
+  });
+}
+function naoAchou(){
+  $app.innerHTML = `<header class="hd-sky"><h1 class="h-light">Não encontrada</h1><span>Essa viagem ou gasto não existe mais.</span></header>
+  <section class="pad"><a class="btn btn-green" href="#/" style="margin-top:16px">Voltar às viagens</a></section>${tabbar('viagens')}`;
+}
+
+/* ---------- rotas ---------- */
+function render(){
+  if (!chave) return telaEntrar();
+  if (!carregado) { $app.innerHTML = '<div class="spin" role="status" aria-label="Carregando"></div>'; return; }
+  const p = (location.hash.replace(/^#\/?/, '') || '').split('/');
+  window.scrollTo(0, 0);
+  switch (p[0]) {
+    case 'v': return telaViagem(p[1], p[2]);
+    case 'novo': return telaGasto(p[1] || idAtual(), null);
+    case 'gasto': return telaGasto(null, p[1]);
+    case 'acerto': return telaAcerto(p[1] || idAtual());
+    case 'limite': return telaLimite(p[1] || idAtual());
+    case 'nova-viagem': return telaNovaViagem();
+    case 'nos': return telaNos();
+    default: F = null; return telaViagens();
+  }
+}
+function emFormulario(){ const p = location.hash; return /^#\/(novo|gasto|nova-viagem|limite)/.test(p) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
+
+(function iniciar(){
+  const m = location.hash.match(/k=([A-Za-z0-9]+)/);
+  if (m) { chave = m[1]; store.set('vd_chave', chave); history.replaceState(null, '', location.pathname + '#/'); }
+  window.addEventListener('hashchange', () => { if (!/^#\/(novo|gasto)/.test(location.hash)) F = null; render(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && chave && !emFormulario()) carregar(true); });
+  setInterval(() => { if (chave && document.visibilityState === 'visible' && !emFormulario()) carregar(true); }, 20000);
+  if (chave) carregar(); else render();
+})();
+</script>
+</body>
+</html>
