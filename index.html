@@ -581,7 +581,7 @@ function telaViagens(){
     let cont = '';
     if (st === 'plan') { const n = diasEntre(hojeISO(), v.inicio); cont = n === 0 ? 'hoje' : `em ${n} dia${n===1?'':'s'}`; }
     else if (st === 'now') { const dia = diasEntre(v.inicio, hojeISO()) + 1, tot = v.fim ? diasEntre(v.inicio, v.fim) + 1 : null; cont = `dia ${dia}${tot ? ' de ' + tot : ''}`; }
-    else cont = 'concluída';
+    else cont = '';
     const corpo = grande ? `<b class="tl-nome">${esc(v.nome)}</b><span class="tl-meta">${meta}</span>` : `<b>${esc(v.nome)}</b><span class="tl-meta">${meta}</span>`;
     return `<div class="tl-no ${grande ? 'atual' : ''} ${st === 'ok' || st === 'end' ? 'passada' : ''}"><span class="tl-dt">${rotuloNo(v, st)}<small>${cont}</small></span>
       <a class="tl-card ${grande ? 'grande' : ''}" href="#/v/${v.id}">${corpo}</a></div>`;
@@ -1494,7 +1494,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-37';
+const VERSAO = '2026-10-27-38';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
