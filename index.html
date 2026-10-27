@@ -9,9 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Viagens a Dois">
-<link rel="apple-touch-icon" href="icon-180.png?v=4">
-<link rel="icon" type="image/png" href="icon-192.png?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=4">
+<link rel="apple-touch-icon" href="icon-180.png?v=5">
+<link rel="icon" type="image/png" href="icon-192.png?v=5">
+<link rel="manifest" href="manifest.webmanifest?v=5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
@@ -107,7 +107,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .ring{position:relative;width:240px;height:240px;align-self:center;margin-top:4px}
 .ring-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
 .ring-l{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.ring-v{font-size:34px;font-weight:800;letter-spacing:-.035em;line-height:1.1}
+.ring-v{max-width:170px;white-space:nowrap;font-size:34px;font-weight:800;letter-spacing:-.035em;line-height:1.1}
 .ring-s{font-size:13px;color:var(--muted)}
 .legend b{font-weight:700;color:var(--ink)}
 #app.folha{padding:0;gap:0;background:#8E8E93;min-height:100vh;min-height:100dvh}
@@ -215,6 +215,7 @@ const CATS = [
   { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Alimentação' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
   { id:'passeios', nome:'Passeios' }, { id:'compras', nome:'Compras' }, { id:'outros', nome:'Outros' }
 ];
+const CAT_COR = { passagens:'#1B2430', comida:'#2453A6', hospedagem:'#6E9BE8', transporte:'#1F9AA0', passeios:'#D9962B', compras:'#CC5F86', outros:'#9AA1AC' };
 const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length-1]).nome;
 
 /* ---------- dados ---------- */
@@ -304,7 +305,7 @@ function tabbar(on){
   const t = (href, key, ic, txt) => `<a href="${href}" class="${on===key?'on':''}" ${on===key?'aria-current="page"':''}>${sv(IC[ic],26,1.7)}${txt}</a>`;
   return `<nav class="tabbar" aria-label="Navegação">
     ${t('#/', 'viagens', 'mala', 'Viagens')}
-    ${t(a ? '#/novo/'+a : '#/nova-viagem', 'novo', 'mais', 'Lançar')}
+    ${t(a ? '#/novo/'+a : '#/nova-viagem', 'novo', 'mais', 'Novo gasto')}
     ${t(a ? '#/acerto/'+a : '#/nova-viagem', 'acerto', 'troca', 'Acerto')}
     ${t(a ? '#/limite/'+a : '#/nova-viagem', 'limite', 'ajuste', 'Limite')}
   </nav>`;
@@ -373,12 +374,20 @@ function telaViagens(){
 let abaViagem = {};
 function anel(r, lim){
   const R = 96, C = 2 * Math.PI * R, base = Math.max(Number(lim)||0, r.total) || 1;
-  const ls = r.pagoS / base * C, lv = r.pagoV / base * C, gap = (ls > 0 && lv > 0) ? 6 : 0;
-  const arco = (len, off, cor) => len > 0.5 ? `<circle cx="120" cy="120" r="${R}" stroke="${cor}" stroke-dasharray="${Math.max(len - gap, 0.1)} ${C}" stroke-dashoffset="${-off}"/>` : '';
-  return `<svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Sérgio pagou ${brl(r.pagoS)}, Victoria pagou ${brl(r.pagoV)}${lim ? ', de um limite de ' + brl(lim) : ''}">
-    <g transform="rotate(-90 120 120)" fill="none" stroke-width="16" stroke-linecap="round">
-      <circle cx="120" cy="120" r="${R}" stroke="var(--fill2)"/>${arco(ls, 0, 'var(--s)')}${arco(lv, ls, 'var(--v)')}</g></svg>`;
+  const fatias = CATS.map(c => ({ c, v: r.cat[c.id] || 0 })).filter(x => x.v > 0).sort((a,b) => b.v - a.v);
+  const gap = fatias.length > 1 ? 5 : 0;
+  let off = 0, arcos = '';
+  fatias.forEach(x => {
+    const len = x.v / base * C;
+    if (len > 1) arcos += `<circle cx="120" cy="120" r="${R}" stroke="${CAT_COR[x.c.id]}" stroke-dasharray="${Math.max(len - gap, 0.5)} ${C}" stroke-dashoffset="${-off}"/>`;
+    off += len;
+  });
+  const desc = fatias.map(x => `${x.c.nome} ${brl(x.v)}`).join(', ');
+  return `<svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Gastos por categoria: ${desc || 'nenhum'}">
+    <g transform="rotate(-90 120 120)" fill="none" stroke-width="16" stroke-linecap="butt">
+      <circle cx="120" cy="120" r="${R}" stroke="var(--fill2)"/>${arcos}</g></svg>`;
 }
+function tamValor(txt){ return Math.max(20, Math.min(34, Math.floor(158 / (txt.length * 0.6)))); }
 function telaViagem(id, abaUrl){
   const v = viagem(id); if (!v) return naoAchou();
   store.set('vd_atual', id);
@@ -415,9 +424,9 @@ function telaViagem(id, abaUrl){
     const linhas = CATS.filter(c => r.cat[c.id] > 0 || Number(lc[c.id]) > 0).sort((a,b) => r.cat[b.id] - r.cat[a.id]).map(c => {
       const val = r.cat[c.id], pc = r.total ? Math.round(val/r.total*100) : 0, l = Number(lc[c.id]) || 0, passou = l && val > l;
       return `<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default">
-        <div style="display:flex;align-items:center;gap:12px"><span class="tile" style="background:${passou?'var(--warn)':'var(--acc)'}">${sv(IC[c.id],18,2)}</span>
+        <div style="display:flex;align-items:center;gap:12px"><span class="tile" style="background:${CAT_COR[c.id]}">${sv(IC[c.id],18,2)}</span>
           <span class="tx"><b>${c.nome}</b><span>${pc}% da viagem${l ? ' · limite ' + brl(l) : ''}</span></span><span class="val strong" style="${passou?'color:var(--warn)':''}">${brl(val)}</span></div>
-        <div class="bar" style="height:6px;margin-left:42px"><span style="width:${val/maior*100}%;background:${passou?'var(--warn)':'var(--acc)'};border-radius:99px"></span></div></div>`;
+        <div class="bar" style="height:6px;margin-left:42px"><span style="width:${val/maior*100}%;background:${passou?'var(--warn)':CAT_COR[c.id]};border-radius:99px"></span></div></div>`;
     }).join('');
     corpo = `<div class="grp">${linhas || '<div class="empty">Ainda não há gastos.</div>'}</div>`;
   }
@@ -429,8 +438,8 @@ function telaViagem(id, abaUrl){
     <a href="#/acerto/${id}" aria-label="Acerto de contas" style="display:flex;flex:none;margin-top:6px"><span class="av S">S</span><span class="av V" style="margin-left:-8px;box-shadow:0 0 0 2px #fff">V</span></a>
   </div>
   <div class="ring">${anel(r, lim)}
-    <div class="ring-c"><span class="ring-l">Gasto</span><span class="ring-v">${brl(r.total)}</span><span class="ring-s">${centro}</span></div></div>
-  <div class="legend" style="justify-content:center;margin-top:-4px"><span><span class="dot S"></span>Sérgio <b>${brl(r.pagoS)}</b></span><span><span class="dot V"></span>Victoria <b>${brl(r.pagoV)}</b></span></div>
+    <div class="ring-c"><span class="ring-l">Gasto</span><span class="ring-v" style="font-size:${tamValor(brl(r.total))}px">${brl(r.total)}</span><span class="ring-s">${centro}</span></div></div>
+  ${r.total ? `<div class="legend" style="justify-content:center;margin-top:-4px;gap:8px 14px">${CATS.filter(c => r.cat[c.id] > 0).sort((a,b) => r.cat[b.id] - r.cat[a.id]).map(c => `<span><span class="dot" style="background:${CAT_COR[c.id]}"></span>${c.nome} <b>${brl(r.cat[c.id])}</b></span>`).join('')}</div>` : ''}
   ${resta ? `<div style="text-align:center;font-size:13px;color:var(--muted);margin-top:-8px">${resta}</div>` : ''}
   ${al ? `<div class="alert">${sv(IC.aviso,20)}<span>${al}</span></div>` : ''}
   <div class="grp"><a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Acerto de contas</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para acertar ainda'}</span></span>${CHEV}</a></div>
@@ -748,7 +757,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-2';
+const VERSAO = '2026-10-27-3';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
