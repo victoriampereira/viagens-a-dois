@@ -534,7 +534,7 @@ function tabbar(on){
   const dentro = ['inicio','gastos','roteiro','reservas'].includes(on) && a;
   if (!dentro) return `<nav class="tabbar" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="Navegação">${t('#/', 'viagens', 'mala', 'Viagens')}${nos()}</nav>`;
   return `<nav class="tabbar" aria-label="Navegação">
-    ${t('#/v/'+a, 'inicio', 'casa', 'Início')}
+    ${t('#/', 'inicio', 'casa', 'Início')}
     ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Financeiro')}
     ${t('#/v/'+a+'/lugares', 'roteiro', 'rota', 'Roteiro')}
     ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
@@ -627,8 +627,8 @@ function listaGastos(gs){
   gs.forEach(g => {
     if (g.data !== ult) { if (abertos) html += '</div>'; ult = g.data; html += `<div class="sh">${fmtGrupo(g.data)}</div><div class="grp">`; abertos = true; }
     const h = horaDe(g);
-    html += `<a class="row" href="#/gasto/${g.id}"><span class="av ${g.pagou}">${g.pagou}</span>
-      <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${catNome(g.categoria)}${h ? ' · ' + h : ''}</span></span>
+    html += `<a class="row" href="#/gasto/${g.id}"><span class="av" style="background:${CAT_COR[g.categoria] || 'var(--muted2)'}" aria-label="${esc(catNome(g.categoria))}">${sv(icCat(g.categoria),15,1.8)}</span>
+      <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${NOME[g.pagou] || ''}${h ? ' · ' + h : ''}</span></span>
       <span class="val">${brl(g.valor)}</span>${CHEV}</a>`;
   });
   return html + (abertos ? '</div>' : '');
@@ -664,8 +664,8 @@ function telaViagem(id, aba){
     <span class="tot-s">${lim ? (r.total > lim ? `passou ${brl(r.total - lim)} do limite de ${brl(lim)}` : `de ${brl(lim)} · ${Math.round(r.total/lim*100)}%`) : `<a href="#/limite/${id}">definir limite</a>`}${dias ? ` · ${porDia} por dia` : ''}</span></div>
   ${fat.length ? `<div class="gringo"><div class="ring-f">${anel(r, 0, true)}</div><div class="gl">${legendaFina}</div></div>` : ''}
   <div class="lstA">
-    ${linhaA('#/gastos/'+id, 'list', 'Ver todas as despesas', `${r.gs.length} despesa${r.gs.length===1?'':'s'} registrada${r.gs.length===1?'':'s'}`)}
-    ${linhaA('#/acerto/'+id, 'troca', 'Divisão das Despesas', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
+    ${linhaA('#/gastos/'+id, 'list', 'Ver todas as compras', `${r.gs.length} compra${r.gs.length===1?'':'s'} registrada${r.gs.length===1?'':'s'}`)}
+    ${linhaA('#/acerto/'+id, 'troca', 'Divisão dos gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
   </div>
 `;
   const nH = itensDe(id,'hospedagem').length, nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
@@ -696,10 +696,10 @@ function telaGastos(id, abaUrl){
   const r = resumo(id);
   const lista = aba === 'todos' ? r.gs : r.gs.filter(g => g.pagou === aba);
   const soma = lista.reduce((t, g) => t + Number(g.valor), 0);
-  const vazio = aba === 'todos' ? 'Nenhuma despesa ainda.' : `Nenhuma despesa paga ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
+  const vazio = aba === 'todos' ? 'Nenhuma compra ainda.' : `Nenhuma compra paga ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
   $app.innerHTML = `
   <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
-  <h1 class="t">Despesas</h1><div class="sub">${lista.length} despesa${lista.length===1?'':'s'} · ${brl(soma)}</div>
+  <h1 class="t">Compras</h1><div class="sub">${lista.length} compra${lista.length===1?'':'s'} · ${brl(soma)}</div>
   <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Filtrar">
     <button data-aba="todos" aria-pressed="${aba==='todos'}">Todos</button><button data-aba="S" aria-pressed="${aba==='S'}">Sérgio</button><button data-aba="V" aria-pressed="${aba==='V'}">Victoria</button></div>
   ${listaGastos(lista) || `<div class="grp"><div class="empty">${vazio}</div></div>`}
@@ -882,7 +882,7 @@ function telaAcerto(id){
       <button class="btn-plain" data-desfaz="${a.id}" style="width:auto;height:36px;font-size:15px">Desfazer</button></div>`).join('');
   $app.innerHTML = `
   <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
-  <h1 class="t">Divisão das Despesas</h1>
+  <h1 class="t">Divisão dos gastos</h1>
   <div class="dv">
     ${[['S', r.pagoS, r.parteS, r.saldoS], ['V', r.pagoV, r.parteV, -r.saldoS]].map(([k, pago, parte, sd]) => {
       const z = Math.abs(sd) < 0.01, pill = z ? ['', 'Em dia'] : sd > 0 ? ['g', 'Recebe ' + brl(sd, true)] : ['r', 'Paga ' + brl(-sd, true)];
@@ -1488,7 +1488,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-43';
+const VERSAO = '2026-10-27-44';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
