@@ -80,8 +80,8 @@ h1.t{margin:0;font-weight:800;font-size:34px;letter-spacing:-.035em;line-height:
 .fin.left{text-align:left;color:var(--ink)}
 select.fin{-webkit-appearance:none;appearance:none;cursor:pointer;text-align:right;text-align-last:right}
 input[type=date].fin{-webkit-appearance:none;appearance:none;min-height:24px}
-.cats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.cats button{height:70px;border:0;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+.cats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cats button{height:68px;border:0;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;padding:0 2px;font-weight:600;cursor:pointer;color:var(--ink)}
 .cats button[aria-pressed="true"]{background:var(--acc);color:#fff}
 .sw{width:51px;height:31px;border:0;border-radius:999px;background:var(--fill2);position:relative;flex:none;cursor:pointer}
 .sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .15s}
@@ -167,6 +167,7 @@ const IC = {
   troca: '<path d="M7 7h13l-4-4M17 17H4l4 4"/>',
   ajuste: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
   aviso: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+  passagens: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
   comida: '<path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7M17 3c-2 2-2 6 0 8v10"/>',
   transporte: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l1.5-4M16 21l-1.5-4"/>',
   hospedagem: '<path d="M3 19V6M3 14h18v5M21 14a3 3 0 0 0-3-3h-7v3"/><circle cx="7" cy="11" r="1.5"/>',
@@ -176,10 +177,10 @@ const IC = {
 };
 const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6"/></svg>`;
 const CATS = [
-  { id:'comida', nome:'Comida' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
+  { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Comida' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
   { id:'passeios', nome:'Passeios' }, { id:'compras', nome:'Compras' }, { id:'outros', nome:'Outros' }
 ];
-const catNome = id => (CATS.find(c => c.id === id) || CATS[5]).nome;
+const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length-1]).nome;
 
 /* ---------- dados ---------- */
 let chave = store.get('vd_chave');
@@ -683,7 +684,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-26-3';
+const VERSAO = '2026-10-26-4';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
