@@ -489,7 +489,7 @@ function rotuloNo(v, st){
 }
 function telaViagens(){
   const dest = destaque();
-  const ordem = [...anteriores().reverse(), ...proximas()]; /* ordem cronológica: da mais antiga para a mais nova */
+  const ordem = [...D.viagens].sort((a, b) => porData(b, a)); /* linha do tempo: as mais novas no topo, as mais antigas embaixo */
   const nos = ordem.map(v => {
     const r = resumo(v.id), st = status(v), lim = Number(v.limite) || 0, grande = dest && v.id === dest.id;
     let meta = fmtPeriodo(v);
@@ -1283,7 +1283,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-13';
+const VERSAO = '2026-10-27-14';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
