@@ -291,6 +291,7 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .dv-p{margin-top:4px;border-radius:9px;padding:7px 6px;font-size:12px;font-weight:600;text-align:center;background:var(--fill2);color:var(--muted)}
 .dv-p.g{background:#E3F4E8;color:#1E7A3D}.dv-p.r{background:#FCE8E6;color:#C0392B}
 .lstA{display:flex;flex-direction:column}
+.lstB{background:var(--fill);border-radius:16px;padding:2px 14px;margin-top:14px}.lstB .ra{padding:9px 0;gap:11px}.lstB .ra-i{width:22px}.lstB .ra-i svg{width:18px;height:18px}.lstB .ra-t b{font-size:14px}.lstB .ra-t span{font-size:11.5px}.lstB .ra:first-child .ra-t b{color:var(--acc)}.lstB .ra>svg{width:14px;height:14px}
 .lstF .ra{padding:10px 0}
 .ra{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:.5px solid var(--fill2);color:var(--ink)}
 .ra:last-child{border-bottom:0}.ra-i{width:26px;display:grid;place-items:center;color:var(--acc);flex:none}
@@ -671,7 +672,7 @@ function telaViagem(id, aba){
 `;
   const nH = itensDe(id,'hospedagem').length, nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
   const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b>${s ? `<span>${s}</span>` : ''}</span>${sv(IC.seta,16,1.5)}</a>`;
-  const inicio = `<div class="lstA">
+  const inicio = `<div class="lstA lstB">
     ${linhaI('#/novo/'+id, 'plus', 'Registrar compra', '')}
     ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Financeiro', r.gs.length ? brl(r.total) + ' até agora' : 'Sem compras registradas')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
@@ -1489,7 +1490,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-46';
+const VERSAO = '2026-10-27-47';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
