@@ -522,7 +522,7 @@ function tabbar(on){
   return `<nav class="tabbar" aria-label="Navegação">
     ${t('#/v/'+a, 'inicio', 'casa', 'Início')}
     ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Gastos')}
-    ${t('#/v/'+a+'/roteiro', 'roteiro', 'rota', 'Roteiro')}
+    ${t('#/v/'+a+'/lugares', 'roteiro', 'rota', 'Roteiro')}
     ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
     ${t('#/', 'viagens', 'mala', 'Viagens', 'so-desk')}${nos('so-desk')}
   </nav>`;
@@ -620,7 +620,8 @@ function listaGastos(gs){
   return html + (abertos ? '</div>' : '');
 }
 function telaViagem(id, aba){
-  aba = ['gastos','roteiro','lugares','reservas'].includes(aba) ? aba : 'inicio';
+  if (aba === 'roteiro') aba = 'lugares';
+  aba = ['gastos','dias','lugares','reservas'].includes(aba) ? aba : 'inicio';
   const v = viagem(id); if (!v) return naoAchou();
   store.set('vd_atual', id);
   const st = status(v);
@@ -662,18 +663,18 @@ function telaViagem(id, aba){
   const cart = (href, ic, t, s, dest) => `<a class="ini-c ${dest ? 'dest' : ''}" href="${href}"><i>${icr(ic,22,1.8)}</i><b>${t}</b><span>${s}</span></a>`;
   const inicio = `<div class="sh" style="margin:6px 0 -2px 4px">O que vocês querem fazer?</div>
     <div class="ini">${cart('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra', true)}${cart('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
-      ${cart('#/v/'+id+'/roteiro', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}${cart('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}</div>
+      ${cart('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}${cart('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}</div>
     <div class="grp"><a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a></div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
-  const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="roteiro" aria-pressed="${aba === 'roteiro'}">Dias</button><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button></div>`;
+  const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
   let tela;
   if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + `<a class="btn" href="#/novo/${id}" style="margin-bottom:4px">${sv(IC.plus,20,2.4)} Lançar gasto</a>` + corpoGastos;
-  else if (aba === 'roteiro') tela = cab('Roteiro', 'Os dias da viagem: onde ficamos e o que vamos fazer.', segRot) + corpoRoteiro(v);
-  else if (aba === 'lugares') tela = cab('Lugares', 'Locais históricos e restaurantes que queremos conhecer.', segRot) + corpoLugares(v);
+  else if (aba === 'lugares') tela = cab('Roteiro', 'Onde vamos ficar e o que queremos conhecer.', segRot) + corpoRoteiro(v, 'dados');
+  else if (aba === 'dias') tela = cab('Roteiro', 'O que vamos fazer em cada dia da viagem.', segRot) + corpoRoteiro(v, 'dias');
   else if (aba === 'reservas') tela = cab('Reservas', 'Passagens e hospedagens da viagem.') + corpoReservas(v);
   else tela = `<nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
     <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>${inicio}`;
-  $app.innerHTML = `${tela}${tabbar(aba === 'lugares' ? 'roteiro' : aba)}`;
+  $app.innerHTML = `${tela}${tabbar(aba === 'lugares' || aba === 'dias' ? 'roteiro' : aba)}`;
   ligarAbas(v, aba);
 }
 function telaGastos(id, abaUrl){
@@ -1259,8 +1260,8 @@ function linhaDia(e){
   const [ico, cl] = AT_ICO[x.tipo] || AT_ICO.outro, l = linksMapa(x);
   return `<div class="row r-it" data-at="${e.i.id}" role="button" tabindex="0"><span class="r-hr">${e.h}</span><span class="r-ti ${cl}">${icr(ico,16)}</span><span class="tx"><b>${esc(x.titulo)}</b>${x.obs || x.tipo === 'historico' ? `<span>${esc(x.obs || 'Local histórico')}</span>` : ''}</span>${l.maps ? `<a class="r-pin" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Abrir no mapa" data-nopen>${icr('pin',18,1.9)}</a>` : ''}</div>`;
 }
-function corpoRoteiro(v){
-  if (!v.inicio) return `<div class="grp"><div class="r-vazio">Defina as datas da viagem para ver os dias do roteiro.<br><a href="#/limite/${v.id}">Editar viagem</a></div></div>`;
+function corpoRoteiro(v, modo){
+  if (modo === 'dias' && !v.inicio) return `<div class="grp"><div class="r-vazio">Defina as datas da viagem para ver os dias do roteiro.<br><a href="#/limite/${v.id}">Editar viagem</a></div></div>`;
   const hoje = hojeISO(), es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
   const noites = e => (e.de && e.ate) ? diasEntre(e.de, e.ate) : 0;
   const lista = es.map((i, n) => { const e = i.dados, ativo = e.de <= hoje && hoje < e.ate, nn = noites(e);
@@ -1269,9 +1270,11 @@ function corpoRoteiro(v){
     const lin = entradasDia(v.id, d).map(linhaDia).join(''), on = onde(v.id, d);
     return `<div><div class="r-dh ${d === hoje ? 'hoje' : ''}"><b>Dia ${diasEntre(v.inicio, d) + 1}</b><span>${fmtDS(d)}</span>${on ? `<i>${icr('pin',12,2)} ${esc(on)}</i>` : ''}</div>
       <div class="grp">${lin}<button class="row r-it r-add" data-add-dia="${d}"><span class="r-hr"></span><span class="tx"><b>${icr('plus',16,2.2)} Adicionar atividade</b></span></button></div></div>`; }).join('');
+  if (modo === 'dias') return dias;
   return `<div class="sh" style="margin:2px 0 -6px 4px">Onde estaremos</div>
     ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}
-    <div class="grp">${lista}<button class="row r-add2" data-est=""><span class="tx"><b>${icr('plus',16,2.2)} Adicionar local</b></span></button></div>${dias}`;
+    <div class="grp">${lista}<button class="row r-add2" data-est=""><span class="tx"><b>${icr('plus',16,2.2)} Adicionar local</b></span></button></div>
+    <div class="sh">Lugares para conhecer</div>${corpoLugares(v)}`;
 }
 const MAPS_KEY = 'AIzaSyAjOZg82ipuelK382ysZjMxIXxC3tkxeEA';
 function carregarGoogle(){
@@ -1385,7 +1388,7 @@ async function menuDoc(a){
   else if (o === 'excluir' && confirm('Excluir este documento?')) { try { await rpc('vd_excluir', { p_tipo:'anexo', p_id:a.id }); await carregar(true); toast('Documento excluído'); } catch(e){ toast(e.message); } }
 }
 function ligarAbas(v, aba){
-  if (aba === 'roteiro') desenharMapa(v);
+  if (aba === 'lugares') desenharMapa(v);
   const q = s => $app.querySelectorAll(s);
   q('[data-aba]').forEach(b => b.onclick = () => { location.hash = '#/v/' + v.id + '/' + b.dataset.aba; });
   q('[data-nopen]').forEach(a => a.onclick = e => e.stopPropagation());
@@ -1474,7 +1477,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-28';
+const VERSAO = '2026-10-27-29';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
