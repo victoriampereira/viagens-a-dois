@@ -201,6 +201,19 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .dia.fim:not(.ini){background:linear-gradient(90deg,var(--acc-soft) 50%,transparent 50%)}
 .cal-res{display:flex;justify-content:space-between;align-items:center;background:var(--fill);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted2)}
 .cal-res b{color:var(--acc);font-size:16px}
+
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none}
+.cat-ic.nova{background:var(--fill2);color:var(--acc)}
+.cat-ic.grande{width:64px;height:64px;border-radius:18px}
+.opgrid button[aria-pressed="true"] .cat-ic{box-shadow:0 0 0 2px #fff}
+.inp-cat{height:50px;border:0;border-radius:12px;background:var(--fill);padding:0 14px;font-size:17px;font-weight:600;text-align:center;outline:none}
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;justify-items:center}
+.swatches button{width:38px;height:38px;border-radius:50%;border:0;cursor:pointer}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+.icones{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.icones button{height:46px;border:0;border-radius:12px;background:var(--fill);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.icones button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.veil .sheet{max-height:92vh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -271,15 +284,34 @@ const IC = {
   hospedagem: '<path d="M3 19V6M3 14h18v5M21 14a3 3 0 0 0-3-3h-7v3"/><circle cx="7" cy="11" r="1.5"/>',
   passeios: '<path d="M4 9l8-5 8 5v2H4z"/><path d="M6 11v7M10 11v7M14 11v7M18 11v7M3 20h18"/>',
   compras: '<path d="M5 8h14l-1 13H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
-  outros: '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>'
+  outros: '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>',
+  tag: '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  presente: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  saude: '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>',
+  cafe: '<path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v2M10 2v2M14 2v2"/>',
+  ingresso: '<path d="M3 9a3 3 0 0 0 0 6v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a3 3 0 0 0 0-6V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/>',
+  praia: '<circle cx="12" cy="10" r="4"/><path d="M12 2v2M4.9 4.9l1.4 1.4M2 10h2M20 10h2M17.7 6.3l1.4-1.4M3 20c3-2 6-2 9 0s6 2 9 0"/>',
+  gasolina: '<path d="M3 22h12M4 9h10M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.8a2 2 0 0 0-.6-1.4L18 5"/>',
+  festa: '<path d="M5.8 11.3 2 22l10.7-3.8M4 3h.01M22 8h.01M15 2h.01M22 20h.01M22 2l-2.2.7a2.9 2.9 0 0 0-1.9 3.3c.2.9-.5 1.9-1.4 1.9H16M9.1 6.9l8 8"/>'
 };
 const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6"/></svg>`;
-const CATS = [
-  { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Alimentação' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
-  { id:'passeios', nome:'Passeios' }, { id:'compras', nome:'Compras' }, { id:'outros', nome:'Outros' }
+const CATS_PADRAO = [
+  { id:'passagens', nome:'Passagens', cor:'#87CEEB', icone:'passagens' }, { id:'comida', nome:'Alimentação', cor:'#BA55D3', icone:'comida' },
+  { id:'hospedagem', nome:'Hospedagem', cor:'#CC0000', icone:'hospedagem' }, { id:'transporte', nome:'Transporte', cor:'#F4C430', icone:'transporte' },
+  { id:'passeios', nome:'Passeios', cor:'#3CB371', icone:'passeios' }, { id:'compras', nome:'Compras', cor:'#FF8C00', icone:'compras' },
+  { id:'outros', nome:'Outros', cor:'#A9A9A9', icone:'outros' }
 ];
-const CAT_COR = { passagens:'#007AFF', comida:'#FF9500', hospedagem:'#34C759', transporte:'#FFCC00', passeios:'#AF52DE', compras:'#FF2D55', outros:'#8E8E93' };
-const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length-1]).nome;
+let CATS = CATS_PADRAO.slice(), CAT_COR = {}, CAT_ICO = {};
+function aplicarCategorias(lista){
+  CATS = (lista && lista.length) ? lista.map(c => ({ id: c.id, nome: c.nome, cor: c.cor, icone: c.icone })) : CATS_PADRAO.slice();
+  CAT_COR = {}; CAT_ICO = {};
+  CATS.forEach(c => { CAT_COR[c.id] = c.cor; CAT_ICO[c.id] = c.icone; });
+}
+aplicarCategorias(null);
+const icCat = id => IC[CAT_ICO[id]] || IC[id] || IC.tag;
+const CORES_NOVAS = ['#87CEEB','#BA55D3','#CC0000','#F4C430','#3CB371','#FF8C00','#1E90FF','#FF69B4','#20B2AA','#8B4513','#6A5ACD','#A9A9A9'];
+const ICONES_NOVOS = ['tag','presente','saude','cafe','ingresso','praia','gasolina','festa','compras','comida','passeios','transporte'];
+const catNome = id => (CATS.find(c => c.id === id) || { nome: 'Outros' }).nome;
 
 /* ---------- dados ---------- */
 let chave = store.get('vd_chave');
@@ -302,7 +334,7 @@ async function carregar(silencioso){
   try {
     const novo = await rpc('vd_dados');
     const mudou = JSON.stringify(novo) !== JSON.stringify(D);
-    D = novo; carregado = true;
+    D = novo; carregado = true; aplicarCategorias(D.categorias);
     if (mudou || !silencioso) render();
   } catch(e) {
     if (e.code === '28000') { chave = null; store.set('vd_chave', null); render(); return; }
@@ -555,6 +587,39 @@ function fmtDataPill(iso){
   if (dd === 1) return 'Ontem';
   const d = dataObj(iso); return d.getDate() + ' ' + MESES[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
 }
+function editarCategoria(cat){
+  return new Promise(res => {
+    let nome = cat ? cat.nome : '', cor = cat ? cat.cor : CORES_NOVAS[CATS.length % CORES_NOVAS.length], icone = cat ? (cat.icone || 'tag') : 'tag';
+    const w = document.createElement('div'); w.className = 'veil'; document.body.appendChild(w);
+    const fim = v => { w.remove(); res(v); };
+    function desenhar(){
+      w.innerHTML = `<form class="sheet" role="dialog" aria-modal="true" aria-label="Categoria"><span class="grab"></span>
+        <h3>${cat ? 'Editar categoria' : 'Nova categoria'}</h3>
+        <div style="display:flex;justify-content:center"><span class="cat-ic grande" style="background:${cor}">${sv(IC[icone] || IC.tag,30,1.9)}</span></div>
+        <input class="inp-cat" id="ec-nome" placeholder="Nome da categoria" value="${esc(nome)}" maxlength="24" autocomplete="off">
+        <div class="sh" style="margin:2px 0 -4px 4px">Cor</div>
+        <div class="swatches">${CORES_NOVAS.map(c => `<button type="button" data-cor="${c}" aria-label="Cor ${c}" aria-pressed="${c===cor}" style="background:${c}"></button>`).join('')}</div>
+        <div class="sh" style="margin:2px 0 -4px 4px">Ícone</div>
+        <div class="icones">${ICONES_NOVOS.map(i => `<button type="button" data-ico="${i}" aria-label="Ícone ${i}" aria-pressed="${i===icone}">${sv(IC[i],22,1.8)}</button>`).join('')}</div>
+        <button class="btn" type="submit">${cat ? 'Salvar' : 'Criar categoria'}</button>
+        <button class="btn-plain" type="button" id="ec-x">Cancelar</button></form>`;
+      const inp = w.querySelector('#ec-nome'); inp.oninput = () => nome = inp.value;
+      w.querySelectorAll('[data-cor]').forEach(b => b.onclick = () => { cor = b.dataset.cor; desenhar(); });
+      w.querySelectorAll('[data-ico]').forEach(b => b.onclick = () => { icone = b.dataset.ico; desenhar(); });
+      w.querySelector('#ec-x').onclick = () => fim(null);
+      w.querySelector('form').onsubmit = async e => {
+        e.preventDefault();
+        if (!nome.trim()) { toast('Dê um nome para a categoria'); inp.focus(); return; }
+        try {
+          const id = await rpc('vd_salvar_categoria', { p: { id: cat ? cat.id : null, nome: nome.trim(), cor, icone } });
+          await carregar(true); toast(cat ? 'Categoria salva' : 'Categoria criada'); fim(id);
+        } catch(err){ toast(err.message); }
+      };
+    }
+    w.onclick = e => { if (e.target === w) fim(null); };
+    desenhar();
+  });
+}
 function escolher(titulo, opcoes, atual){
   return new Promise(res => {
     const w = document.createElement('div'); w.className = 'veil';
@@ -588,7 +653,7 @@ function telaGasto(viagemId, gastoId){
     <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar gasto' : 'Novo gasto'}</h1>
     <div class="valor ${parseValor(F.valor) ? '' : 'zero'}" id="valor" aria-live="polite" style="margin-top:10px">${fmtDigitado(F.valor)}</div>
     <div class="pills2">
-      <button type="button" class="pl on" id="p-cat">${sv(IC[F.categoria],16,2)}${catNome(F.categoria)}</button>
+      <button type="button" class="pl on" id="p-cat">${sv(icCat(F.categoria),16,2)}${catNome(F.categoria)}</button>
       <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:20px;height:20px;font-size:10px">${F.pagou}</span>${NOME[F.pagou]}</button>
       ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,16,2)}${esc(v.nome)}</button>` : ''}
     </div>
@@ -603,7 +668,8 @@ function telaGasto(viagemId, gastoId){
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
   document.getElementById('p-cat').onclick = async () => {
-    const r = await escolher('Categoria', CATS.map(c => ({ v: c.id, t: c.nome, ic: sv(IC[c.id],22,1.8) })), F.categoria);
+    let r = await escolher('Categoria', [...CATS.map(c => ({ v: c.id, t: c.nome, ic: `<span class="cat-ic" style="background:${c.cor}">${sv(icCat(c.id),18,2)}</span>` })), { v: '__nova', t: 'Nova categoria', ic: `<span class="cat-ic nova">${sv(IC.plus,18,2.2)}</span>` }], F.categoria);
+    if (r === '__nova') r = await editarCategoria(null);
     if (r) { F.categoria = r; desenhar(); }
   };
   document.getElementById('p-quem').onclick = async () => {
@@ -839,12 +905,17 @@ function telaNos(){
   <div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))" role="group" aria-label="Quem usa este celular">
     ${['S','V'].map(p => `<button data-eu="${p}" aria-pressed="${eu===p}">${NOME[p]}</button>`).join('')}</div>
   <div class="foot">Quem pagou já vem marcado com o seu nome ao lançar um gasto.</div>
+  <div class="sh">Categorias</div>
+  <div class="grp">${CATS.map(c => `<button class="row" data-cat-ed="${c.id}"><span class="cat-ic" style="background:${c.cor}">${sv(icCat(c.id),16,2)}</span><span class="tx"><b>${esc(c.nome)}</b></span>${CHEV}</button>`).join('')}
+    <button class="row" id="bt-nova-cat" style="color:var(--acc)"><span class="cat-ic nova">${sv(IC.plus,16,2.2)}</span><span class="tx"><b style="color:var(--acc)">Nova categoria</b></span></button></div>
   <div class="sh">Usar no outro celular</div>
   <div class="grp"><button class="row" id="bt-link"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Compartilhar link do casal</b><span>Mande só entre vocês dois</span></span>${CHEV}</button></div>
   <div class="sh">Tela de início</div>
   <div class="grp"><div class="row" style="cursor:default"><span class="tx"><span style="font-size:14px;color:var(--muted2)">iPhone: no Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”. Android: no Chrome, menu ⋮ e “Adicionar à tela inicial”. Se pedir o código depois, cole o link do casal.</span></span></div></div>
   <div class="grp"><button class="row danger" id="bt-sair" style="justify-content:center;font-weight:600">Sair deste celular</button></div>
   ${tabbar('')}`;
+  $app.querySelectorAll('[data-cat-ed]').forEach(b => b.onclick = async () => { const c = CATS.find(x => x.id === b.dataset.catEd); if (await editarCategoria(c)) telaNos(); });
+  document.getElementById('bt-nova-cat').onclick = async () => { if (await editarCategoria(null)) telaNos(); };
   $app.querySelectorAll('[data-eu]').forEach(b => b.onclick = () => { eu = b.dataset.eu; store.set('vd_eu', eu); telaNos(); toast('Pronto, ' + NOME[eu]); });
   document.getElementById('bt-link').onclick = async () => {
     try { if (navigator.share) { await navigator.share({ title: 'Viagens a Dois', text: 'Nosso app de gastos de viagem', url: link }); return; } } catch(e){ if (e.name === 'AbortError') return; }
@@ -896,7 +967,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-8';
+const VERSAO = '2026-10-27-9';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
