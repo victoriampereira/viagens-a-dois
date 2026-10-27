@@ -278,7 +278,7 @@ const CATS = [
   { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Alimentação' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
   { id:'passeios', nome:'Passeios' }, { id:'compras', nome:'Compras' }, { id:'outros', nome:'Outros' }
 ];
-const CAT_COR = { passagens:'#1B2430', comida:'#2453A6', hospedagem:'#6E9BE8', transporte:'#1F9AA0', passeios:'#D9962B', compras:'#CC5F86', outros:'#9AA1AC' };
+const CAT_COR = { passagens:'#007AFF', comida:'#FF9500', hospedagem:'#34C759', transporte:'#FFCC00', passeios:'#AF52DE', compras:'#FF2D55', outros:'#8E8E93' };
 const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length-1]).nome;
 
 /* ---------- dados ---------- */
@@ -896,7 +896,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-7';
+const VERSAO = '2026-10-27-8';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
