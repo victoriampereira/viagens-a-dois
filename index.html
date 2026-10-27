@@ -288,6 +288,15 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .dv-c>span:not(.av){font-size:13.5px;font-weight:600;margin-bottom:6px}
 .dv-p{margin-top:4px;border-radius:9px;padding:7px 6px;font-size:12px;font-weight:600;text-align:center;background:var(--fill2);color:var(--muted)}
 .dv-p.g{background:#E3F4E8;color:#1E7A3D}.dv-p.r{background:#FCE8E6;color:#C0392B}
+.lstA{display:flex;flex-direction:column}
+.ra{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:.5px solid var(--fill2);color:var(--ink)}
+.ra:last-child{border-bottom:0}.ra-i{width:26px;display:grid;place-items:center;color:var(--acc);flex:none}
+.ra-t{flex:1;display:flex;flex-direction:column;min-width:0}.ra-t b{font-size:15px;font-weight:600}.ra-t span{font-size:12.5px;color:var(--muted)}.ra>svg{color:#B5B5BA}
+.tot{display:flex;flex-direction:column;gap:2px;margin-top:2px}.tot-l{font-size:12px;color:var(--muted)}
+.tot b{font-size:34px;font-weight:300;letter-spacing:-.04em;line-height:1.1}.tot-s{font-size:12.5px;color:var(--muted)}.tot-s a{color:var(--acc);text-decoration:underline}
+.gringo{display:flex;align-items:center;gap:20px;margin:18px 0 6px}.ring-f{flex:none;width:108px;height:108px}
+.gl{flex:1;display:flex;flex-direction:column;min-width:0}.gl-it{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
+.gl-it .dot{width:8px;height:8px;flex:none}.gl-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gl-v{color:var(--muted)}.gl-p{color:var(--ink);font-weight:600;min-width:30px;text-align:right}
 .ini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .ini-c{background:var(--fill);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:3px;min-height:104px;color:var(--ink)}
 .ini-c i{width:38px;height:38px;border-radius:11px;background:#fff;display:grid;place-items:center;color:var(--acc);margin-bottom:8px}
@@ -586,10 +595,10 @@ function telaViagens(){
 }
 
 let abaViagem = {};
-function anel(r, lim){
+function anel(r, lim, fino){
   const R = 96, C = 2 * Math.PI * R, base = Math.max(Number(lim)||0, r.total) || 1;
   const fatias = CATS.map(c => ({ c, v: r.cat[c.id] || 0 })).filter(x => x.v > 0).sort((a,b) => b.v - a.v);
-  const gap = fatias.length > 1 ? 5 : 0;
+  const gap = fatias.length > 1 ? (fino ? 7 : 5) : 0;
   let off = 0, arcos = '';
   fatias.forEach(x => {
     const len = x.v / base * C;
@@ -597,8 +606,8 @@ function anel(r, lim){
     off += len;
   });
   const desc = fatias.map(x => `${x.c.nome} ${brl(x.v)}`).join(', ');
-  return `<svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Gastos por categoria: ${desc || 'nenhum'}">
-    <g transform="rotate(-90 120 120)" fill="none" stroke-width="16" stroke-linecap="butt">
+  return `<svg width="${fino ? 108 : 240}" height="${fino ? 108 : 240}" viewBox="0 0 240 240" role="img" aria-label="Gastos por categoria: ${desc || 'nenhum'}">
+    <g transform="rotate(-90 120 120)" fill="none" stroke-width="${fino ? 13 : 16}" stroke-linecap="butt">
       <circle cx="120" cy="120" r="${R}" stroke="var(--fill2)"/>${arcos}</g></svg>`;
 }
 function tamValor(txt){ return Math.max(20, Math.min(34, Math.floor(158 / (txt.length * 0.6)))); }
@@ -645,32 +654,29 @@ function telaViagem(id, aba){
   const fat = CATS.filter(c => r.cat[c.id] > 0).sort((a,b) => r.cat[b.id] - r.cat[a.id]);
   const topo = fat[0];
   const legenda = fat.map(c => `<div class="lg-it"><span class="dot" style="background:${CAT_COR[c.id]}"></span><span class="lg-n">${c.nome}</span><span class="lg-p">${Math.round(r.cat[c.id]/r.total*100)}%</span><b>${brl(r.cat[c.id])}</b></div>`).join('');
+  const legendaFina = fat.map(c => `<div class="gl-it"><span class="dot" style="background:${CAT_COR[c.id]}"></span><span class="gl-n">${c.nome}</span><span class="gl-v">${brl(r.cat[c.id])}</span><span class="gl-p">${Math.round(r.cat[c.id]/r.total*100)}%</span></div>`).join('');
+  const linhaA = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
   const corpoGastos = `
-  <div class="blocos">
-    ${bloco('Gasto total', brl(r.total), totalSub, true)}
-    ${bloco('Por dia', porDia, subDia)}
-  </div>
-  ${fat.length ? `<div class="sh">Por categoria</div>
-  <div class="grp" style="padding:16px 14px;display:flex;flex-direction:column;gap:12px">
-    <div class="ring">${anel(r, 0)}
-      <div class="ring-c"><span class="ring-l">${topo.nome}</span><span class="ring-v" style="font-size:34px">${Math.round(r.cat[topo.id]/r.total*100)}%</span><span class="ring-s">do total</span></div></div>
-    <div class="lg">${legenda}</div>
-  </div>` : ''}
-  <div class="grp">
-    <a class="row" href="#/gastos/${id}"><span class="tile">${sv('<path d="M4 6h16M4 12h16M4 18h10"/>',18,2)}</span><span class="tx"><b>Ver todos os gastos</b><span>${r.gs.length} gasto${r.gs.length===1?'':'s'} lançado${r.gs.length===1?'':'s'}</span></span>${CHEV}</a>
-    <a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a>
+  <div class="tot"><span class="tot-l">Total</span><b>${brl(r.total)}</b>
+    <span class="tot-s">${lim ? (r.total > lim ? `passou ${brl(r.total - lim)} do limite de ${brl(lim)}` : `de ${brl(lim)} · ${Math.round(r.total/lim*100)}%`) : `<a href="#/limite/${id}">definir limite</a>`}${dias ? ` · ${porDia} por dia` : ''}</span></div>
+  ${fat.length ? `<div class="gringo"><div class="ring-f">${anel(r, 0, true)}</div><div class="gl">${legendaFina}</div></div>` : ''}
+  <div class="lstA">
+    ${linhaA('#/gastos/'+id, 'list', 'Ver todos os gastos', `${r.gs.length} gasto${r.gs.length===1?'':'s'} lançado${r.gs.length===1?'':'s'}`)}
+    ${linhaA('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
   </div>
 `;
   const nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
-  const cart = (href, ic, t, s, dest) => `<a class="ini-c ${dest ? 'dest' : ''}" href="${href}"><i>${icr(ic,22,1.8)}</i><b>${t}</b><span>${s}</span></a>`;
-  const inicio = `<div class="sh" style="margin:6px 0 -2px 4px">O que vocês querem fazer?</div>
-    <div class="ini">${cart('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra', true)}${cart('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
-      ${cart('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}${cart('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}</div>
-    <div class="grp"><a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a></div>`;
+  const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
+  const inicio = `<div class="lstA">
+    ${linhaI('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra')}
+    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
+    ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
+    ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}
+    ${linhaI('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}</div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
   const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
   let tela;
-  if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + `<a class="btn" href="#/novo/${id}" style="margin-bottom:4px">${sv(IC.plus,20,2.4)} Lançar gasto</a>` + corpoGastos;
+  if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + corpoGastos;
   else if (aba === 'lugares') tela = cab('Roteiro', 'Onde vamos ficar e o que queremos conhecer.', segRot) + corpoRoteiro(v, 'dados');
   else if (aba === 'dias') tela = cab('Roteiro', 'O que vamos fazer em cada dia da viagem.', segRot) + corpoRoteiro(v, 'dias');
   else if (aba === 'reservas') tela = cab('Reservas', 'Passagens e hospedagens da viagem.') + corpoReservas(v);
@@ -1081,6 +1087,7 @@ const fmtDS = iso => iso ? DIAS[dataObj(iso).getDay()] + ', ' + fmtDia(iso) : ''
 const itensDe = (vid, tipo) => (D.itens || []).filter(i => i.viagem_id === vid && i.tipo === tipo);
 const itemPorId = id => (D.itens || []).find(i => i.id === id);
 const ICR = {
+  list: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   casa: '<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
   moeda: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.4 0-2.5.7-2.5 1.9 0 2.7 5 1.4 5 4.1 0 1.2-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.5-1.3M12 6.5V8M12 16v1.5"/>',
   rota: '<path d="M9 4 3 6.5v13.5L9 17.5l6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
@@ -1479,7 +1486,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-30';
+const VERSAO = '2026-10-27-31';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
