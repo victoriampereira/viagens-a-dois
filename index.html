@@ -673,8 +673,7 @@ function telaViagem(id, aba){
     ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Despesas', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
     ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
-    ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}
-    ${linhaI('#/acerto/'+id, 'troca', 'Divisão das Despesas', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}</div>`;
+    ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}</div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
   const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
   let tela;
@@ -1495,7 +1494,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-35';
+const VERSAO = '2026-10-27-36';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
