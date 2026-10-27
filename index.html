@@ -138,6 +138,19 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .keys button{height:52px;border:0;background:transparent;border-radius:12px;font-size:26px;font-weight:500;cursor:pointer;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 .keys button:active{background:var(--fill)}
 .btn-sec{height:52px;padding:0 18px;border-radius:14px;border:1px solid var(--sep);background:#fff;font-size:16px;font-weight:700;cursor:pointer}
+
+.pills2{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.pills2 .pl{position:relative;height:38px;padding:0 14px;border-radius:999px;border:0;background:var(--fill);display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink);overflow:hidden}
+.pills2 .pl.on{background:var(--acc-soft);color:var(--acc)}
+.pills2 .pl input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}
+.opgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opgrid button{height:78px;border:0;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink)}
+.opgrid button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.oplist{display:flex;flex-direction:column;background:var(--fill);border-radius:14px;overflow:hidden}
+.oplist button{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border:0;border-bottom:.5px solid var(--sep);background:transparent;font-size:17px;font-weight:600;cursor:pointer;text-align:left;color:var(--ink)}
+.oplist button:last-child{border-bottom:0}
+.oplist button[aria-pressed="true"]{color:var(--acc)}
+.oplist button[aria-pressed="true"]::after{content:"✓";margin-left:auto;font-weight:800}
 </style>
 </head>
 <body>
@@ -468,7 +481,25 @@ function tecla(k){
   F.valor = s;
   const el = document.getElementById('valor');
   el.textContent = fmtDigitado(s); el.classList.toggle('zero', !parseValor(s));
-  document.getElementById('previa').textContent = previa();
+  const pr = document.getElementById('previa'); if (pr) pr.textContent = previa();
+}
+function fmtDataPill(iso){
+  const dd = diasEntre(iso, hojeISO());
+  if (dd === 0) return 'Hoje';
+  if (dd === 1) return 'Ontem';
+  const d = dataObj(iso); return d.getDate() + ' ' + MESES[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
+}
+function escolher(titulo, opcoes, atual){
+  return new Promise(res => {
+    const w = document.createElement('div'); w.className = 'veil';
+    w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><span class="grab"></span><h3>${esc(titulo)}</h3>
+      <div class="${opcoes.length > 3 ? 'opgrid' : 'oplist'}">${opcoes.map(o => `<button type="button" data-v="${o.v}" aria-pressed="${o.v===atual}">${o.ic || ''}<span>${o.t}</span></button>`).join('')}</div>
+      <button class="btn-plain" type="button" data-v="">Cancelar</button></div>`;
+    document.body.appendChild(w);
+    const fim = v => { w.remove(); res(v || null); };
+    w.onclick = e => { if (e.target === w) fim(null); };
+    w.querySelectorAll('[data-v]').forEach(b => b.onclick = () => fim(b.dataset.v));
+  });
 }
 function telaGasto(viagemId, gastoId){
   const g = gastoId ? D.gastos.find(x => x.id === gastoId) : null;
@@ -482,37 +513,47 @@ function telaGasto(viagemId, gastoId){
           : { k, viagem_id: vid, valor: '', descricao: '', categoria: 'comida', pagou: eu || 'S', divisao: 'metade', pct: 50, data: hojeISO() };
   }
   const v = viagem(F.viagem_id);
-  const opcoes = D.viagens.map(x => `<option value="${x.id}" ${x.id===F.viagem_id?'selected':''}>${esc(x.nome)}</option>`).join('');
   const teclas = ['1','2','3','4','5','6','7','8','9',',','0','apagar'];
   $app.classList.add('folha');
   $app.innerHTML = `
   <a class="fundo" href="#/v/${vid}" aria-label="Fechar"><span class="fundo-t">${esc(v.nome)}</span><span class="fundo-s">${fmtPeriodo(v)}</span></a>
   <form id="f-gasto" class="sheet2">
     <span class="grab"></span>
-    <div class="sh2"><span class="eyb">${g ? 'Editar gasto' : 'Novo gasto'}</span>
-      <label class="data"><span style="position:absolute;width:1px;height:1px;overflow:hidden">Data</span><input id="in-data" type="date" value="${F.data}"></label></div>
-    <div class="valor ${parseValor(F.valor) ? '' : 'zero'}" id="valor" aria-live="polite">${fmtDigitado(F.valor)}</div>
-    <span class="hint" id="previa" style="margin-top:-6px">${previa()}</span>
+    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar gasto' : 'Novo gasto'}</h1>
+    <div class="valor ${parseValor(F.valor) ? '' : 'zero'}" id="valor" aria-live="polite" style="margin-top:10px">${fmtDigitado(F.valor)}</div>
+    <div class="pills2">
+      <button type="button" class="pl on" id="p-cat">${sv(IC[F.categoria],16,2)}${catNome(F.categoria)}</button>
+      <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:20px;height:20px;font-size:10px">${F.pagou}</span>${NOME[F.pagou]}</button>
+      <label class="pl" id="p-data">${fmtDataPill(F.data)}<input id="in-data" type="date" value="${F.data}" aria-label="Data"></label>
+      ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,16,2)}${esc(v.nome)}</button>` : ''}
+    </div>
     <label for="in-desc" style="position:absolute;width:1px;height:1px;overflow:hidden">Descrição</label>
-    <input id="in-desc" class="desc" placeholder="Descrição (ex.: jantar)" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done">
-    ${g || D.viagens.length < 2 ? '' : `<label class="viag"><span>Viagem:</span><select id="sel-v">${opcoes}</select></label>`}
-    <div class="quem" role="group" aria-label="Quem pagou">
-      ${['S','V'].map(p => `<button type="button" class="${p}" data-pagou="${p}" aria-pressed="${F.pagou===p}"><span class="av ${p}" style="width:24px;height:24px;font-size:11px">${p}</span>${F.pagou===p ? NOME[p] + ' pagou' : NOME[p]}</button>`).join('')}</div>
-    <div class="catrow" role="group" aria-label="Categoria">${CATS.map(c => `<button type="button" data-cat="${c.id}" aria-pressed="${F.categoria===c.id}">${sv(IC[c.id],20,1.8)}${c.nome}</button>`).join('')}</div>
+    <input id="in-desc" class="desc" placeholder="Descrição (opcional)" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done">
     <div class="keys">${teclas.map(t => `<button type="button" data-k="${t}" ${t==='apagar'?'aria-label="Apagar"':''}>${t === 'apagar' ? sv('<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12 9l5 6M17 9l-5 6"/>',26,1.7) : t}</button>`).join('')}</div>
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
-      <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Lançar'}</button></div>
+      <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Novo gasto'}</button></div>
   </form>`;
+  const desenhar = () => telaGasto(viagemId, gastoId);
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
-  document.getElementById('in-data').onchange = e => F.data = e.target.value || hojeISO();
-  const sel = document.getElementById('sel-v');
-  if (sel) sel.onchange = () => { F.viagem_id = sel.value; F.k = 'n:' + sel.value; store.set('vd_atual', sel.value); history.replaceState(null,'','#/novo/' + sel.value); telaGasto(sel.value, null); };
+  document.getElementById('in-data').onchange = e => { F.data = e.target.value || hojeISO(); desenhar(); };
+  document.getElementById('p-cat').onclick = async () => {
+    const r = await escolher('Categoria', CATS.map(c => ({ v: c.id, t: c.nome, ic: sv(IC[c.id],22,1.8) })), F.categoria);
+    if (r) { F.categoria = r; desenhar(); }
+  };
+  document.getElementById('p-quem').onclick = async () => {
+    const r = await escolher('Quem pagou', ['S','V'].map(p => ({ v: p, t: NOME[p], ic: `<span class="av ${p}">${p}</span>` })), F.pagou);
+    if (r) { F.pagou = r; desenhar(); }
+  };
+  const pv = document.getElementById('p-viag');
+  if (pv) pv.onclick = async () => {
+    const r = await escolher('Viagem', D.viagens.map(x => ({ v: x.id, t: esc(x.nome) })), F.viagem_id);
+    if (r && r !== F.viagem_id) { F.viagem_id = r; F.k = 'n:' + r; store.set('vd_atual', r); history.replaceState(null,'','#/novo/' + r); telaGasto(r, null); }
+  };
   $app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => tecla(b.dataset.k));
-  $app.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { F.categoria = b.dataset.cat; $app.querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
-  $app.querySelectorAll('[data-pagou]').forEach(b => b.onclick = () => { F.pagou = b.dataset.pagou; telaGasto(viagemId, gastoId); });
   document.onkeydown = e => {
+    if (document.querySelector('.veil')) return;
     if (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
     if (/^[0-9]$/.test(e.key)) tecla(e.key); else if (e.key === ',' || e.key === '.') tecla(','); else if (e.key === 'Backspace') tecla('apagar');
   };
@@ -757,7 +798,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-3';
+const VERSAO = '2026-10-27-4';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
