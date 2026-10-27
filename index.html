@@ -162,13 +162,13 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .tl-no.atual .tl-dt{color:var(--acc)}
 .tl-card{display:flex;flex-direction:column;gap:3px;background:var(--fill);border-radius:14px;padding:12px 14px;color:var(--ink)}
 .tl-card b{font-size:16px;font-weight:700}
-.tl-card.grande{padding:16px;gap:4px}
+.tl-card.grande{background:transparent;border-radius:0;padding:2px 0 2px 12px;border-left:2px solid var(--acc);gap:1px}
 .tl-no.passada .tl-card{opacity:.7}
-.tl-tag{font-size:12px;font-weight:700;color:var(--acc)}
-.tl-nome{font-size:24px!important;font-weight:800!important;letter-spacing:-.03em}
-.tl-meta{font-size:13px;color:var(--muted)}
-.tl-num{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:6px}
-.tl-num small{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.tl-tag{font-size:11px;font-weight:600;color:var(--acc)}
+.tl-nome{font-size:20px!important;font-weight:600!important;letter-spacing:-.02em}
+.tl-meta{font-size:12.5px;color:var(--muted)}
+.tl-num{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-top:3px}
+.tl-num small{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
 .stack{display:flex;gap:2px;height:8px;border-radius:99px;overflow:hidden;background:var(--fill2);margin-top:6px}
 .stack i{display:block}
 .blocos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -441,7 +441,7 @@ function rotuloNo(v, st){
 }
 function telaViagens(){
   const dest = destaque();
-  const ordem = [...proximas(), ...anteriores()];
+  const ordem = [...anteriores().reverse(), ...proximas()]; /* ordem cronológica: da mais antiga para a mais nova */
   const nos = ordem.map(v => {
     const r = resumo(v.id), st = status(v), lim = Number(v.limite) || 0, grande = dest && v.id === dest.id;
     let meta = fmtPeriodo(v);
@@ -967,7 +967,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-9';
+const VERSAO = '2026-10-27-10';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
