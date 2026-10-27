@@ -88,10 +88,10 @@ input[type=date].fin{-webkit-appearance:none;appearance:none;min-height:24px}
 .sw[aria-pressed="true"]{background:var(--acc)}
 .sw[aria-pressed="true"]::after{left:22px}
 .tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(480px,100%);background:#fff;border-top:.5px solid var(--fill2);padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 6px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));z-index:10}
-.tabbar svg{width:23px;height:23px;stroke-width:1.25}
-.tabbar a{display:flex;flex-direction:column;align-items:center;font-size:0;gap:0;color:#A1A1A6;min-height:46px;justify-content:center;position:relative}
+.tabbar svg{width:23px;height:23px;stroke-width:1.5}
+.tabbar a{display:flex;flex-direction:column;align-items:center;font-size:10.5px;font-weight:600;gap:3px;color:#A1A1A6;min-height:50px;justify-content:center;position:relative}
 .tabbar a.on{color:var(--acc)}
-.tabbar a.on::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.tabbar a.on::after{display:none}
 .bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab) + env(safe-area-inset-bottom,0px) - 6px);width:min(480px,100%);padding:12px 16px 10px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 35%);display:flex;flex-direction:column;gap:6px;z-index:5}
 .hint{font-size:13px;color:var(--muted);text-align:center}
 .empty{padding:20px 16px;color:var(--muted);text-align:center;font-size:15px}
@@ -273,6 +273,16 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .grp{border-radius:12px}.tile{width:26px;height:26px;border-radius:7px}
 .r-it .tx b{font-size:13.5px}.r-it .tx span{font-size:11.5px}.r-hr{font-size:12px}.valor{font-size:44px}.keys button{font-size:22px;height:48px}.r-voo-r b,.r-bp-m b{font-size:22px}.r-bp-m b{font-size:28px}
 .so-desk{display:none!important}
+.ini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ini-c{background:var(--fill);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:3px;min-height:104px;color:var(--ink)}
+.ini-c i{width:38px;height:38px;border-radius:11px;background:#fff;display:grid;place-items:center;color:var(--acc);margin-bottom:8px}
+.ini-c b{font-size:16px;font-weight:700}.ini-c span{font-size:12.5px;color:var(--muted)}.ini-c.dest{background:var(--acc-soft)}
+.r-vaz{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:48px 24px 8px}
+.r-vaz i{width:72px;height:72px;border-radius:50%;background:var(--acc-soft);display:grid;place-items:center;color:var(--acc);margin-bottom:6px}
+.r-vaz b{font-size:17px}.r-vaz span{font-size:13px;color:var(--muted);line-height:1.4}
+.r-vaz .btn{margin-top:14px;width:auto;padding:0 22px;height:46px;font-size:15px}
+.r-dk{display:flex;align-items:center;padding:0}.r-dk>button:first-child{flex:1;display:flex;align-items:center;gap:12px;padding:11px 0 11px 16px;background:none;border:0;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.r-more{width:48px;height:48px;border:0;background:none;font-size:22px;color:var(--muted2);cursor:pointer}
 .r-mapa{height:272px;border-radius:16px;overflow:hidden;background:var(--fill);margin:4px 0 6px;position:relative;z-index:0}
 .r-mapa .leaflet-tile-pane{filter:saturate(.7) contrast(.95) brightness(1.04)}
 .r-mapa-img{width:100%;height:100%;object-fit:cover;display:block}
@@ -494,12 +504,12 @@ function tabbar(on){
   const a = idAtual();
   const t = (href, key, ic, txt, cl) => `<a href="${href}" aria-label="${txt}" class="${cl||''} ${on===key?'on':''}" ${on===key?'aria-current="page"':''}>${sv(IC[ic]||ICR[ic],26,1.7)}${txt}</a>`;
   const nos = cl => t('#/nos', 'nos', 'nos', 'Nós', cl);
-  const dentro = ['gastos','roteiro','lugares','reservas'].includes(on) && a;
+  const dentro = ['inicio','gastos','roteiro','reservas'].includes(on) && a;
   if (!dentro) return `<nav class="tabbar" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="Navegação">${t('#/', 'viagens', 'mala', 'Viagens')}${nos()}</nav>`;
   return `<nav class="tabbar" aria-label="Navegação">
-    ${t('#/v/'+a, 'gastos', 'moeda', 'Gastos')}
+    ${t('#/v/'+a, 'inicio', 'casa', 'Início')}
+    ${t('#/v/'+a+'/gastos', 'gastos', 'moeda', 'Gastos')}
     ${t('#/v/'+a+'/roteiro', 'roteiro', 'rota', 'Roteiro')}
-    ${t('#/v/'+a+'/lugares', 'lugares', 'land', 'Lugares')}
     ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
     ${t('#/', 'viagens', 'mala', 'Viagens', 'so-desk')}${nos('so-desk')}
   </nav>`;
@@ -601,7 +611,7 @@ function listaGastos(gs){
   return html + (abertos ? '</div>' : '');
 }
 function telaViagem(id, aba){
-  aba = ['roteiro','lugares','reservas'].includes(aba) ? aba : 'gastos';
+  aba = ['gastos','roteiro','lugares','reservas'].includes(aba) ? aba : 'inicio';
   const v = viagem(id); if (!v) return naoAchou();
   store.set('vd_atual', id);
   const st = status(v);
@@ -639,12 +649,22 @@ function telaViagem(id, aba){
     <a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a>
   </div>
 `;
-  const corpo = aba === 'roteiro' ? corpoRoteiro(v) : aba === 'lugares' ? corpoLugares(v) : aba === 'reservas' ? corpoReservas(v) : corpoGastos;
-  $app.innerHTML = `
-  <nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
-  <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>
-  ${corpo}
-  ${tabbar(aba)}`;
+  const nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
+  const cart = (href, ic, t, s, dest) => `<a class="ini-c ${dest ? 'dest' : ''}" href="${href}"><i>${icr(ic,22,1.8)}</i><b>${t}</b><span>${s}</span></a>`;
+  const inicio = `<div class="sh" style="margin:6px 0 -2px 4px">O que vocês querem fazer?</div>
+    <div class="ini">${cart('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra', true)}${cart('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
+      ${cart('#/v/'+id+'/roteiro', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}${cart('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}</div>
+    <div class="grp"><a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a></div>`;
+  const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
+  const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="roteiro" aria-pressed="${aba === 'roteiro'}">Dias</button><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button></div>`;
+  let tela;
+  if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + `<a class="btn" href="#/novo/${id}" style="margin-bottom:4px">${sv(IC.plus,20,2.4)} Lançar gasto</a>` + corpoGastos;
+  else if (aba === 'roteiro') tela = cab('Roteiro', 'Os dias da viagem: onde ficamos e o que vamos fazer.', segRot) + corpoRoteiro(v);
+  else if (aba === 'lugares') tela = cab('Lugares', 'Locais históricos e restaurantes que queremos conhecer.', segRot) + corpoLugares(v);
+  else if (aba === 'reservas') tela = cab('Reservas', 'Passagens e hospedagens da viagem.') + corpoReservas(v);
+  else tela = `<nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
+    <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>${inicio}`;
+  $app.innerHTML = `${tela}${tabbar(aba === 'lugares' ? 'roteiro' : aba)}`;
   ligarAbas(v, aba);
 }
 function telaGastos(id, abaUrl){
@@ -1055,6 +1075,7 @@ const fmtDS = iso => iso ? DIAS[dataObj(iso).getDay()] + ', ' + fmtDia(iso) : ''
 const itensDe = (vid, tipo) => (D.itens || []).filter(i => i.viagem_id === vid && i.tipo === tipo);
 const itemPorId = id => (D.itens || []).find(i => i.id === id);
 const ICR = {
+  casa: '<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
   moeda: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.4 0-2.5.7-2.5 1.9 0 2.7 5 1.4 5 4.1 0 1.2-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.5-1.3M12 6.5V8M12 16v1.5"/>',
   rota: '<path d="M9 4 3 6.5v13.5L9 17.5l6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
   nos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M19 15c1.5.8 2.4 2.3 2.7 4.5"/>',
@@ -1311,9 +1332,9 @@ function corpoLugares(v){
     return `<div class="row" data-at="${i.id}" role="button" tabindex="0"><button class="r-ck ${x.feito ? 'on' : ''}" data-feito="${i.id}" aria-label="Marcar como visitado" aria-pressed="${!!x.feito}">${x.feito ? icr('check',14,3) : ''}</button>
       ${x.foto ? `<img class="r-th" src="${x.foto}" alt="">` : ''}<span class="tx"><b>${esc(x.titulo)}</b><span>${x.tipo === 'refeicao' ? 'Restaurante' : 'Local histórico'}${x.nota ? ' · ★ ' + String(x.nota).replace('.', ',') : ''}</span>${x.obs || x.endereco ? `<span>${esc(x.obs || x.endereco)}</span>` : ''}</span>
       <span class="r-dtag ${x.dia ? '' : 'no'}">${x.dia ? 'Dia ' + (diasEntre(v.inicio, x.dia) + 1) : 'Sem dia'}</span>${l.maps ? `<a class="r-pin" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Abrir no mapa" data-nopen>${icr('pin',18,1.9)}</a>` : ''}</div>`; }).join('');
+  if (!ls.length) return `<div class="r-vaz"><i>${icr('land',34,1.5)}</i><b>Nenhum lugar ainda</b><span>Procure pelo nome, como "Coliseu" ou "Kampeki Sushi", e o app traz foto, nota e endereço.</span><button class="btn" data-novo-lugar>${icr('plus',20,2.2)} Adicionar lugar</button></div>`;
   return `${ls.length ? `<div class="r-prog"><span><b>${ok}</b> de ${ls.length} visitado${ls.length === 1 ? '' : 's'}</span><div class="bar"><span style="width:${ok / ls.length * 100}%;background:var(--acc)"></span></div></div>` : ''}
-    <div class="grp">${lin || '<div class="r-vazio">Nenhum lugar ainda.</div>'}<button class="row r-add2" data-novo-lugar><span class="tx"><b>${icr('plus',16,2.2)} Adicionar lugar</b></span></button></div>
-    <div class="foot">Toque no círculo para marcar como visitado. Toque no pin para abrir no mapa.</div>`;
+    <div class="grp">${lin || '<div class="r-vazio">Nenhum lugar ainda.</div>'}<button class="row r-add2" data-novo-lugar><span class="tx"><b>${icr('plus',16,2.2)} Adicionar lugar</b></span></button></div>`;
 }
 const cartaoVoo = i => { const x = i.dados;
   return `<a class="r-voo" href="#/voo/${i.id}"><div class="r-voo-t"><span>${esc(x.grupo || 'Voo')} · ${fmtDS(dtDia(x.saida))}</span><span>${esc(x.cia)} ${esc(x.numero)}</span></div>
@@ -1330,12 +1351,9 @@ function corpoReservas(v){
     <div class="grp">${hs.map(i => { const x = i.dados, n = noites(x);
       return `<a class="row" href="#/hosp/${i.id}"><span class="tile soft">${icr('bed',16)}</span><span class="tx"><b>${esc(x.nome)}</b><span>${esc(x.cidade || '')}${x.cidade && x.entrada ? ' · ' : ''}${x.entrada ? fmtDia(x.entrada) + (x.saida ? '–' + fmtDia(x.saida) : '') : ''}</span></span>${n ? `<span class="val">${n} noite${n === 1 ? '' : 's'}</span>` : ''}${CHEV}</a>`; }).join('')}
       <button class="row r-add2" data-nova-hosp><span class="tx"><b>${icr('plus',16,2.2)} Adicionar hospedagem</b></span></button></div>
-    <div class="sh">Documentos</div>
-    <div class="grp">${docs.map(a => `<button class="row" data-doc="${a.id}"><span class="tile soft">${icr('doc',16)}</span><span class="tx"><b>${esc(a.nome)}</b><span>${a.mime === 'application/pdf' ? 'PDF' : 'Arquivo'} · ${Math.max(1, Math.round(a.tamanho / 1024))} KB</span></span>${CHEV}</button>`).join('')}
-      <button class="row r-add2" data-novo-doc><span class="tx"><b>${icr('plus',16,2.2)} Adicionar PDF das passagens</b></span></button></div>
-    <div class="foot">Os documentos ficam salvos para vocês dois e abrem direto no celular.</div>`;
+`;
 }
-function escolherArquivo(vid){
+function escolherArquivo(vid, aoSalvar){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,image/*';
   inp.onchange = async () => {
     const f = inp.files[0]; if (!f) return;
@@ -1343,8 +1361,8 @@ function escolherArquivo(vid){
     toast('Enviando…', 8000);
     try {
       const b64 = await new Promise((ok, err) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = err; r.readAsDataURL(f); });
-      await rpc('vd_salvar_anexo', { p: { viagem_id: vid, nome: f.name, mime: f.type || 'application/pdf', tamanho: f.size, conteudo: b64 } });
-      await carregar(true); toast('Documento salvo');
+      const id = await rpc('vd_salvar_anexo', { p: { viagem_id: vid, nome: f.name, mime: f.type || 'application/pdf', tamanho: f.size, conteudo: b64 } });
+      if (aoSalvar) await aoSalvar(id); else { await carregar(true); toast('Documento salvo'); }
     } catch(e){ toast('Não consegui enviar o arquivo'); }
   };
   inp.click();
@@ -1366,7 +1384,7 @@ async function menuDoc(a){
 function ligarAbas(v, aba){
   if (aba === 'roteiro') desenharMapa(v);
   const q = s => $app.querySelectorAll(s);
-  q('[data-aba]').forEach(b => b.onclick = () => { location.hash = '#/v/' + v.id + (b.dataset.aba === 'gastos' ? '' : '/' + b.dataset.aba); });
+  q('[data-aba]').forEach(b => b.onclick = () => { location.hash = '#/v/' + v.id + '/' + b.dataset.aba; });
   q('[data-nopen]').forEach(a => a.onclick = e => e.stopPropagation());
   q('[data-at]').forEach(b => { const abrir = () => editarAtividade(v.id, itemPorId(b.dataset.at)); b.onclick = abrir; b.onkeydown = e => { if (e.key === 'Enter') abrir(); }; });
   q('[data-add-dia]').forEach(b => b.onclick = () => editarAtividade(v.id, null, { dia: b.dataset.addDia }));
@@ -1381,9 +1399,7 @@ function ligarAbas(v, aba){
 function telaVoo(id){
   const it = itemPorId(id); if (!it) return naoAchou();
   const x = it.dados, v = viagem(it.viagem_id), vol = '#/v/' + it.viagem_id + '/reservas';
-  const todosDocs = (D.anexos || []).filter(a => a.viagem_id === it.viagem_id);
-  const lig = Array.isArray(x.anexos) ? (D.anexos || []).filter(a => x.anexos.includes(a.id)) : [];
-  const doc = lig.length ? lig : todosDocs;
+  const doc = Array.isArray(x.anexos) ? (D.anexos || []).filter(a => x.anexos.includes(a.id)) : [];
   $app.innerHTML = `
   <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Reservas</a><button id="bt-ed">Editar</button></nav>
   <h1 class="t">${esc(x.grupo || 'Voo')}</h1><div class="sub">${fmtDS(dtDia(x.saida))}${v ? ' · ' + esc(v.nome) : ''}</div>
@@ -1396,11 +1412,19 @@ function telaVoo(id){
     <div class="row"><span class="tx" style="flex:none"><b>Passageiros</b></span><span class="fin">${esc(x.passageiros || '—')}</span></div>
     ${x.obs ? `<div class="row"><span class="tx" style="flex:none"><b>Observação</b></span><span class="fin">${esc(x.obs)}</span></div>` : ''}</div>
   ${x.localizador ? '<button class="btn-sec" id="bt-copiar" style="width:100%">Copiar localizador</button>' : ''}
-  ${doc.length ? `<div class="sh">${lig.length ? 'PDF desta passagem' : 'Documentos da viagem'}</div><div class="grp">${doc.map(a => `<button class="row" data-doc="${a.id}"><span class="tile soft">${icr('doc',16)}</span><span class="tx"><b>${esc(a.nome)}</b><span>Toque para abrir o PDF</span></span>${CHEV}</button>`).join('')}</div>${lig.length ? '' : '<div class="foot">Edite a passagem para escolher o PDF dela.</div>'}` : ''}
+  <div class="sh">PDF da passagem</div>
+  <div class="grp">${doc.map(a => `<div class="row r-dk"><button data-doc="${a.id}"><span class="tile soft">${icr('doc',16)}</span><span class="tx"><b>${esc(a.nome)}</b><span>Toque para abrir</span></span>${CHEV}</button><button class="r-more" data-docm="${a.id}" aria-label="Mais opções">⋯</button></div>`).join('')}
+    <button class="row r-add2" id="bt-pdf"><span class="tx"><b>${icr('plus',16,2.2)} Adicionar PDF</b></span></button></div>
   ${tabbar('reservas')}`;
   document.getElementById('bt-ed').onclick = () => editarVoo(it.viagem_id, it);
   const c = document.getElementById('bt-copiar'); if (c) c.onclick = async () => { try { await navigator.clipboard.writeText(x.localizador); toast('Localizador copiado'); } catch(e){ toast(x.localizador); } };
   $app.querySelectorAll('[data-doc]').forEach(b => b.onclick = () => abrirAnexo(doc.find(a => a.id === b.dataset.doc)));
+  document.getElementById('bt-pdf').onclick = () => escolherArquivo(it.viagem_id, async id => { await salvarItem(it.viagem_id, 'voo', it.id, Object.assign({}, x, { anexos: (x.anexos || []).concat(id) })); });
+  $app.querySelectorAll('[data-docm]').forEach(b => b.onclick = async () => { const a = doc.find(d => d.id === b.dataset.docm);
+    const o = await escolher(a.nome, [{ v:'abrir', t:'Abrir' }, { v:'tirar', t:'Tirar desta passagem' }, { v:'excluir', t:'Excluir arquivo' }]);
+    if (o === 'abrir') abrirAnexo(a);
+    else if (o === 'tirar') await salvarItem(it.viagem_id, 'voo', it.id, Object.assign({}, x, { anexos: (x.anexos || []).filter(i => i !== a.id) }));
+    else if (o === 'excluir' && confirm('Excluir este PDF para sempre?')) { try { await rpc('vd_excluir', { p_tipo:'anexo', p_id:a.id }); await salvarItem(it.viagem_id, 'voo', it.id, Object.assign({}, x, { anexos: (x.anexos || []).filter(i => i !== a.id) })); } catch(e){ toast(e.message); } } });
 }
 function telaHosp(id){
   const it = itemPorId(id); if (!it) return naoAchou();
@@ -1447,7 +1471,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-23';
+const VERSAO = '2026-10-27-25';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
