@@ -633,7 +633,7 @@ function listaGastos(gs){
 }
 function telaViagem(id, aba){
   if (aba === 'roteiro') aba = 'lugares';
-  aba = ['gastos','dias','lugares','reservas'].includes(aba) ? aba : 'inicio';
+  aba = ['gastos','dias','lugares','reservas','hospedagens'].includes(aba) ? aba : 'inicio';
   const v = viagem(id); if (!v) return naoAchou();
   store.set('vd_atual', id);
   const st = status(v);
@@ -666,13 +666,14 @@ function telaViagem(id, aba){
     ${linhaA('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}
   </div>
 `;
-  const nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
+  const nH = itensDe(id,'hospedagem').length, nR = itensDe(id,'voo').length, nL = itensDe(id,'estadia').length, nD = diasDaViagem(v).length;
   const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b><span>${s}</span></span>${sv(IC.seta,16,1.5)}</a>`;
   const inicio = `<div class="lstA">
     ${linhaI('#/novo/'+id, 'plus', 'Lançar gasto', 'Registrar uma compra')}
     ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Gastos', r.gs.length ? brl(r.total) + ' até agora' : 'Nada lançado ainda')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
-    ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens e hospedagens')}
+    ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
+    ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}
     ${linhaI('#/acerto/'+id, 'troca', 'Divisão dos Gastos', r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda')}</div>`;
   const cab = (t, s, extra) => `<nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><a href="#/limite/${id}">Editar</a></nav><h1 class="t">${t}</h1><div class="sub">${s}</div>${extra || ''}`;
   const segRot = `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px" role="group"><button data-aba="lugares" aria-pressed="${aba === 'lugares'}">Lugares</button><button data-aba="dias" aria-pressed="${aba === 'dias'}">Dias</button></div>`;
@@ -680,10 +681,11 @@ function telaViagem(id, aba){
   if (aba === 'gastos') tela = cab('Gastos', 'Quanto já gastaram e como dividir.') + corpoGastos;
   else if (aba === 'lugares') tela = cab('Roteiro', 'Onde vamos ficar e o que queremos conhecer.', segRot) + corpoRoteiro(v, 'dados');
   else if (aba === 'dias') tela = cab('Roteiro', 'O que vamos fazer em cada dia da viagem.', segRot) + corpoRoteiro(v, 'dias');
-  else if (aba === 'reservas') tela = cab('Reservas', 'Passagens e hospedagens da viagem.') + corpoReservas(v);
+  else if (aba === 'reservas') tela = cab('Reservas', 'Passagens da viagem.') + corpoReservas(v);
+  else if (aba === 'hospedagens') tela = cab('Hospedagens', 'Onde vamos dormir.') + corpoHosp(v);
   else tela = `<nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
     <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>${inicio}`;
-  $app.innerHTML = `${tela}${tabbar(aba === 'lugares' || aba === 'dias' ? 'roteiro' : aba)}`;
+  $app.innerHTML = `${tela}${tabbar(aba === 'lugares' || aba === 'dias' ? 'roteiro' : aba === 'hospedagens' ? 'inicio' : aba)}`;
   ligarAbas(v, aba);
 }
 function telaGastos(id, abaUrl){
@@ -1248,12 +1250,11 @@ const editarVoo = (vid, it, pre) => editarItem(vid, 'voo', it, [
     Object.assign({ anexos:[], grupo:'Ida', cia:'', numero:'', de:'', para:'', cidade_de:'', cidade_para:'', saida:'', chegada:'', localizador:'', assentos:'', passageiros:'Sérgio, Victoria', obs:'' }, pre || {}),
     { titulo: it ? 'Editar passagem' : 'Nova passagem', obrig:'de', msg:'Informe a origem e o destino' });
 const editarHosp = (vid, it, pre) => editarItem(vid, 'hospedagem', it, [
-    { k:'nome', l:'Nome', ph:'Ex.: Casa Colonial' }, { k:'cidade', l:'Cidade' },
-    { k:'entrada', l:'Entrada', t:'date' }, { k:'hora_entrada', l:'Hora de entrada', t:'time' }, { k:'saida', l:'Saída', t:'date' }, { k:'hora_saida', l:'Hora de saída', t:'time' },
-    { k:'endereco', l:'Endereço', ph:'Rua, número, cidade' }, { k:'link', l:'Link Maps ou Waze', ph:'Colar link' },
-    { k:'reserva', l:'Código da reserva' }, { k:'valor', l:'Valor', ph:'Ex.: R$ 1.050' }, { k:'obs', l:'Observação' }],
-    Object.assign({ nome:'', cidade:'', entrada:'', hora_entrada:'', saida:'', hora_saida:'', endereco:'', link:'', reserva:'', valor:'', obs:'' }, pre || {}),
-    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Dê um nome para a hospedagem', busca: p => ({ nome: p.nome, cidade: p.cidade, endereco: p.endereco, link: linkLugar(p) }), viagem: viagem(vid) });
+    { k:'cidade', t:'hidden' }, { k:'endereco', t:'hidden' }, { k:'link', t:'hidden' },
+    ...(it ? [{ k:'nome', l:'Nome', ph:'Nome da hospedagem' }] : [{ k:'nome', t:'hidden' }]),
+    { k:'tipo_h', l:'Tipo', t:'select', o:TIPOS_H }, { k:'entrada', l:'Entrada', t:'date' }, { k:'saida', l:'Saída', t:'date' }],
+    Object.assign({ nome:'', tipo_h:'hotel', cidade:'', entrada:'', saida:'', endereco:'', link:'' }, pre || {}),
+    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Procure a hospedagem no mapa', busca: p => ({ nome: p.nome, cidade: p.cidade, endereco: p.endereco, link: linkLugar(p) }), viagem: viagem(vid) });
 
 /* --- abas da viagem --- */
 function entradasDia(vid, d){
@@ -1361,17 +1362,21 @@ const cartaoVoo = i => { const x = i.dados;
     <div class="r-voo-r"><div><b>${esc(x.de)}</b><small>${hm(x.saida)}</small></div><div class="r-voo-l"><i></i>${icr('voo',16,1.6)}<i></i></div><div style="text-align:right"><b>${esc(x.para)}</b><small>${hm(x.chegada)}${dtDia(x.chegada) > dtDia(x.saida) ? ' (+1)' : ''}</small></div></div>${(x.anexos || []).length ? `<div class="r-pdf">${icr('doc',13,2)} PDF da passagem</div>` : ''}</a>`; };
 function corpoReservas(v){
   const voos = itensDe(v.id,'voo').sort((a,b) => (a.dados.saida || '') < (b.dados.saida || '') ? -1 : 1);
-  const hs = itensDe(v.id,'hospedagem').sort((a,b) => (a.dados.entrada || '') < (b.dados.entrada || '') ? -1 : 1);
   const docs = (D.anexos || []).filter(a => a.viagem_id === v.id);
   const noites = x => (x.entrada && x.saida) ? diasEntre(x.entrada, x.saida) : 0;
   return `<div class="sh" style="margin:2px 0 -6px 4px">Passagens</div>
     ${voos.map(cartaoVoo).join('')}
     <div class="grp"><button class="row r-add2" data-novo-voo><span class="tx"><b>${icr('plus',16,2.2)} Adicionar passagem</b></span></button></div>
-    <div class="sh">Hospedagens</div>
-    <div class="grp">${hs.map(i => { const x = i.dados, n = noites(x);
-      return `<a class="row" href="#/hosp/${i.id}"><span class="tile soft">${icr('bed',16)}</span><span class="tx"><b>${esc(x.nome)}</b><span>${esc(x.cidade || '')}${x.cidade && x.entrada ? ' · ' : ''}${x.entrada ? fmtDia(x.entrada) + (x.saida ? '–' + fmtDia(x.saida) : '') : ''}</span></span>${n ? `<span class="val">${n} noite${n === 1 ? '' : 's'}</span>` : ''}${CHEV}</a>`; }).join('')}
-      <button class="row r-add2" data-nova-hosp><span class="tx"><b>${icr('plus',16,2.2)} Adicionar hospedagem</b></span></button></div>
 `;
+}
+const TIPOS_H = [['hotel','Hotel'],['airbnb','Airbnb'],['outro','Outro']];
+const rotuloH = t => (TIPOS_H.find(o => o[0] === t) || [0,'Hospedagem'])[1];
+function corpoHosp(v){
+  const hs = itensDe(v.id,'hospedagem').sort((a,b) => (a.dados.entrada || '9') < (b.dados.entrada || '9') ? -1 : 1);
+  if (!hs.length) return `<div class="r-vaz"><i>${icr('bed',34,1.5)}</i><b>Nenhuma hospedagem ainda</b><span>Procure o hotel ou a casa pelo nome e informe a entrada e a saída.</span><button class="btn" data-nova-hosp>${icr('plus',20,2.2)} Adicionar hospedagem</button></div>`;
+  return `<div class="grp">${hs.map(i => { const x = i.dados, n = (x.entrada && x.saida) ? diasEntre(x.entrada, x.saida) : 0;
+    return `<a class="row r-lg" href="#/hosp/${i.id}">${x.foto ? `<img class="r-th" src="${x.foto}" alt="">` : `<span class="r-th ph">${icr('bed',30,1.4)}</span>`}<span class="tx"><b>${esc(x.nome)}</b><span>${rotuloH(x.tipo_h)}${x.nota ? ' · ★ ' + String(x.nota).replace('.', ',') : ''}</span><span>${x.entrada ? fmtDia(x.entrada) + (x.saida ? ' – ' + fmtDia(x.saida) : '') : 'Sem datas'}${n ? ' · ' + n + ' noite' + (n === 1 ? '' : 's') : ''}</span>${x.endereco ? `<span class="r-ad">${esc(x.endereco)}</span>` : ''}</span></a>`; }).join('')}
+    <button class="row r-add2" data-nova-hosp><span class="tx"><b>${icr('plus',16,2.2)} Adicionar hospedagem</b></span></button></div>`;
 }
 function escolherArquivo(vid, aoSalvar){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,image/*';
@@ -1417,10 +1422,10 @@ function ligarAbas(v, aba){
 }
 function telaVoo(id){
   const it = itemPorId(id); if (!it) return naoAchou();
-  const x = it.dados, v = viagem(it.viagem_id), vol = '#/v/' + it.viagem_id + '/reservas';
+  const x = it.dados, v = viagem(it.viagem_id), vol = '#/v/' + it.viagem_id + '/hospedagens';
   const doc = Array.isArray(x.anexos) ? (D.anexos || []).filter(a => x.anexos.includes(a.id)) : [];
   $app.innerHTML = `
-  <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Reservas</a><button id="bt-ed">Editar</button></nav>
+  <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Hospedagens</a><button id="bt-ed">Editar</button></nav>
   <h1 class="t">${esc(x.grupo || 'Voo')}</h1><div class="sub">${fmtDS(dtDia(x.saida))}${v ? ' · ' + esc(v.nome) : ''}</div>
   <div class="r-bp"><div class="r-bp-a"><span>${esc(x.cia)}</span><span>Voo ${esc(x.numero)}</span></div>
     <div class="r-bp-m"><div><b>${esc(x.de)}</b><small>${esc(x.cidade_de || '')}</small><em>${hm(x.saida)}</em></div><div class="r-voo-l"><i></i>${icr('voo',18,1.6)}<i></i></div>
@@ -1450,7 +1455,7 @@ function telaHosp(id){
   const x = it.dados, n = (x.entrada && x.saida) ? diasEntre(x.entrada, x.saida) : 0, vol = '#/v/' + it.viagem_id + '/reservas';
   $app.innerHTML = `
   <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Reservas</a><button id="bt-ed">Editar</button></nav>
-  <h1 class="t">${esc(x.nome)}</h1><div class="sub">${esc(x.cidade || '')}${n ? (x.cidade ? ' · ' : '') + n + ' noite' + (n === 1 ? '' : 's') : ''}</div>
+  <h1 class="t">${esc(x.nome)}</h1><div class="sub">${rotuloH(x.tipo_h)}${x.cidade ? ' · ' + esc(x.cidade) : ''}${n ? ' · ' + n + ' noite' + (n === 1 ? '' : 's') : ''}</div>
   <div class="duo"><div class="mini"><span class="ml">Entrada</span><b style="font-size:18px">${x.entrada ? fmtDia(x.entrada) : '—'}</b><span class="ml">${x.entrada ? DIAS[dataObj(x.entrada).getDay()] : ''}${x.hora_entrada ? ' · a partir das ' + x.hora_entrada : ''}</span></div>
     <div class="mini"><span class="ml">Saída</span><b style="font-size:18px">${x.saida ? fmtDia(x.saida) : '—'}</b><span class="ml">${x.saida ? DIAS[dataObj(x.saida).getDay()] : ''}${x.hora_saida ? ' · até ' + x.hora_saida : ''}</span></div></div>
   ${x.endereco || x.link ? `<div class="grp" style="padding:14px 16px"><div class="r-addr"><span class="tile soft">${icr('pin',16)}</span><span class="r-tx2"><b>${esc(x.endereco || 'Endereço no mapa')}</b>${x.cidade ? `<span>${esc(x.cidade)}</span>` : ''}</span></div>${btnsMapa(x)}</div>` : ''}
@@ -1458,7 +1463,7 @@ function telaHosp(id){
     <div class="row"><span class="tx" style="flex:none"><b>Reserva</b></span><span class="fin" style="color:var(--ink);font-weight:600">${esc(x.reserva || '—')}</span></div>
     <div class="row"><span class="tx" style="flex:none"><b>Valor</b></span><span class="fin">${esc(x.valor || '—')}</span></div>
     ${x.obs ? `<div class="row"><span class="tx" style="flex:none"><b>Observação</b></span><span class="fin">${esc(x.obs)}</span></div>` : ''}</div>
-  ${tabbar('reservas')}`;
+  ${tabbar('inicio')}`;
   document.getElementById('bt-ed').onclick = () => editarHosp(it.viagem_id, it);
 }
 function abasViagem(id, aba){
@@ -1490,7 +1495,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-33';
+const VERSAO = '2026-10-27-34';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
