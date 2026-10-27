@@ -157,7 +157,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .tl{position:relative;display:flex;flex-direction:column;gap:12px;padding-left:58px}
 .tl::before{content:"";position:absolute;left:46px;top:8px;bottom:8px;width:2px;background:var(--fill2);border-radius:2px}
 .tl-no{position:relative}
-.tl-dt{position:absolute;left:-58px;top:12px;width:38px;text-align:right;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;line-height:1.1}
+.tl-dt{position:absolute;left:-62px;top:12px;width:40px;white-space:nowrap;text-align:right;font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;line-height:1.1}
 .tl-dt small{display:block;font-size:10px;font-weight:700}
 .tl-no::before{content:"";position:absolute;left:-16px;top:14px;width:10px;height:10px;border-radius:50%;background:#C7C7CC;box-shadow:0 0 0 3px var(--bg)}
 .tl-no.atual::before{background:var(--acc);width:12px;height:12px;left:-17px;top:13px}
@@ -485,7 +485,7 @@ function rotuloNo(v, st){
   if (st === 'now') return 'Agora';
   if (!v.inicio) return '—';
   const d = dataObj(v.inicio), ano = d.getFullYear() !== new Date().getFullYear();
-  return MESES[d.getMonth()] + (ano ? `<small>${d.getFullYear()}</small>` : '');
+  return MESES[d.getMonth()] + '/' + String(d.getFullYear()).slice(2);
 }
 function telaViagens(){
   const dest = destaque();
@@ -1283,7 +1283,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-14';
+const VERSAO = '2026-10-27-15';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
