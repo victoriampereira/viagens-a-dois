@@ -120,7 +120,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .sheet2{flex:1;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(var(--tab) + env(safe-area-inset-bottom,0px) - 8px);display:flex;flex-direction:column;gap:12px}
 .sheet2 .grab{margin-bottom:-2px}
 .sheet2.c{gap:10px;padding-bottom:16px}.vrow{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 2px 4px;cursor:text}.vrow>span{font-size:12px;color:var(--muted)}.vrow b{display:flex;align-items:baseline;justify-content:center;gap:6px;font-weight:300}.vrow i{font-style:normal;font-size:22px;color:var(--muted2)}.vrow input{border:0;outline:none;background:transparent;font:300 34px Manrope,sans-serif;letter-spacing:-.03em;min-width:1ch;text-align:right;padding:0;caret-color:var(--acc);color:var(--ink)}.vrow input::placeholder{color:#C7C7CC}
-.pills2.m{justify-content:center;gap:7px}.pills2.m .pl{height:30px;padding:0 11px;margin:0;box-shadow:none;font-size:12.5px;font-weight:600;gap:5px}.drow{display:flex;align-items:center;justify-content:center;gap:12px;border-top:.5px solid var(--sep);padding:8px 2px 2px;cursor:text}.drow>span{font-size:13px;color:var(--muted)}.drow .desc{text-align:center;font-size:15px;padding:4px 0}
+.pills2.m{justify-content:center;gap:7px}.pills2.m .pl{height:30px;padding:0 11px;margin:0;box-shadow:none;font-size:12.5px;font-weight:600;gap:5px}.drow{display:block;border-top:.5px solid var(--sep);padding:6px 2px 2px;cursor:text}.drow .desc{text-align:center;font-size:15px;padding:6px 0}
 .sh2{display:flex;justify-content:space-between;align-items:center}
 .eyb{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
 .data input{border:0;background:var(--fill);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:600;color:var(--ink);-webkit-appearance:none;appearance:none;min-height:32px}
@@ -709,6 +709,13 @@ function telaGastos(id, abaUrl){
 
 /* --- novo / editar gasto: folha com teclado numérico --- */
 let F = null;
+/* iPhone só abre o teclado se o foco nascer no toque: abrimos um campo temporário e passamos o foco para o campo de valor */
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[href^="#/novo/"]'); if (!a) return;
+  try { const t = document.createElement('input'); t.setAttribute('inputmode', 'decimal'); t.setAttribute('aria-hidden', 'true'); t.tabIndex = -1;
+    t.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0'; document.body.appendChild(t); t.focus(); window.__kb = t;
+    setTimeout(() => { if (window.__kb === t) { t.remove(); window.__kb = null; } }, 1500); } catch(err){}
+}, true);
 function fmtDigitado(s){
   if (!s) return 'R$ 0';
   const [i, d] = s.split(',');
@@ -788,9 +795,8 @@ function telaGasto(viagemId, gastoId){
       <button type="button" class="pl on" id="p-cat">${sv(icCat(F.categoria),14,2)}${catNome(F.categoria)}</button>
       <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:16px;height:16px;font-size:9px">${F.pagou}</span>${NOME[F.pagou]}</button>
       ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,14,2)}${esc(v.nome)}</button>` : ''}
-      ${F.descricao || F.mostrarDesc ? '' : '<button type="button" class="pl" id="p-desc">Descrição</button>'}
     </div>
-    ${F.descricao || F.mostrarDesc ? `<label for="in-desc" class="drow"><span>Descrição</span><input id="in-desc" class="desc" placeholder="Opcional" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done"></label>` : ''}
+    <label for="in-desc" class="drow"><input id="in-desc" class="desc" placeholder="Descrição (opcional)" aria-label="Descrição" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done"></label>
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
       <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Registrar despesa'}</button></div>
@@ -802,9 +808,8 @@ function telaGasto(viagemId, gastoId){
     if (iv.value !== t) iv.value = t; F.valor = t; larg(); };
   const idc = document.getElementById('in-desc');
   if (idc) { idc.oninput = e => F.descricao = e.target.value; idc.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }; }
-  const pd = document.getElementById('p-desc');
-  if (pd) pd.onclick = () => { F.mostrarDesc = true; desenhar(); setTimeout(() => { const d = document.getElementById('in-desc'); if (d) d.focus(); }, 30); };
-  if (!g && !F.valor && !F.mostrarDesc) setTimeout(() => { try { iv.focus(); } catch(e){} }, 120);
+  if (!g && !F.valor) { try { iv.focus(); } catch(e){} }
+  if (window.__kb) { window.__kb.remove(); window.__kb = null; }
   document.getElementById('p-cat').onclick = async () => {
     let r = await escolher('Categoria', [...CATS.map(c => ({ v: c.id, t: c.nome, ic: `<span class="cat-ic" style="background:${c.cor}">${sv(icCat(c.id),18,2)}</span>` })), { v: '__nova', t: 'Nova categoria', ic: `<span class="cat-ic nova">${sv(IC.plus,18,2.2)}</span>` }], F.categoria);
     if (r === '__nova') r = await editarCategoria(null);
@@ -1483,7 +1488,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-42';
+const VERSAO = '2026-10-27-43';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
