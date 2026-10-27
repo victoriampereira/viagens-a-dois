@@ -682,7 +682,23 @@ function render(){
 }
 function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
+/* ---------- atualização automática ---------- */
+const VERSAO = '2026-10-26-3';
+async function checarVersao(){
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const { versao } = await r.json();
+    if (versao && versao !== VERSAO && !emFormulario()) {
+      const h = location.hash.startsWith('#/') ? location.hash : '#/';
+      location.replace(location.pathname + '?v=' + encodeURIComponent(versao) + h);
+    }
+  } catch(e){}
+}
+
 (function iniciar(){
+  checarVersao();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checarVersao(); });
   const m = location.hash.match(/k=([A-Za-z0-9]+)/);
   if (m) { chave = m[1]; store.set('vd_chave', chave); history.replaceState(null, '', location.pathname + location.search + '#/'); }
   window.addEventListener('hashchange', () => { if (!/^#\/(novo|gasto)/.test(location.hash)) F = null; render(); });
