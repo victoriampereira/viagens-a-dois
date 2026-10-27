@@ -158,7 +158,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .tl::before{content:"";position:absolute;left:46px;top:8px;bottom:8px;width:2px;background:var(--fill2);border-radius:2px}
 .tl-no{position:relative}
 .tl-dt{position:absolute;left:-62px;top:12px;width:40px;white-space:nowrap;text-align:right;font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;line-height:1.1}
-.tl-dt small{display:block;font-size:10px;font-weight:700}
+.tl-dt small{display:block;font-size:9.5px;font-weight:500;color:var(--acc);text-transform:none;white-space:normal;margin-top:2px;letter-spacing:0}
 .tl-no::before{content:"";position:absolute;left:-16px;top:14px;width:10px;height:10px;border-radius:50%;background:#C7C7CC;box-shadow:0 0 0 3px var(--bg)}
 .tl-no.atual::before{background:var(--acc);width:12px;height:12px;left:-17px;top:13px}
 .tl-no.atual .tl-dt{color:var(--acc)}
@@ -565,17 +565,13 @@ function telaViagens(){
   const ordem = [...D.viagens].sort((a, b) => porData(b, a)); /* linha do tempo: as mais novas no topo, as mais antigas embaixo */
   const nos = ordem.map(v => {
     const r = resumo(v.id), st = status(v), lim = Number(v.limite) || 0, grande = dest && v.id === dest.id;
-    let meta = fmtPeriodo(v);
-    if (st === 'plan') { const n = diasEntre(hojeISO(), v.inicio); meta += ` · faltam ${n} dia${n===1?'':'s'}`; if (lim && !grande) meta += ` · limite ${brl(lim)}`; }
-    else if (!grande) meta += ` · ${brl(r.total)}`;
-    let corpo;
-    if (grande) {
-      let tag = STATUS_TXT[st];
-      if (st === 'now') { const dia = diasEntre(v.inicio, hojeISO()) + 1, tot = v.fim ? diasEntre(v.inicio, v.fim) + 1 : null; tag += ` · dia ${dia}${tot ? ' de ' + tot : ''}`; }
-      corpo = `<span class="tl-tag">${tag}</span><b class="tl-nome">${esc(v.nome)}</b><span class="tl-meta">${meta}</span>
-        <div class="tl-num">${brl(r.total)}${lim ? ` <small>de ${brl(lim)}</small>` : ''}</div>${stackCats(r)}`;
-    } else corpo = `<b>${esc(v.nome)}</b><span class="tl-meta">${meta}</span>`;
-    return `<div class="tl-no ${grande ? 'atual' : ''} ${st === 'ok' || st === 'end' ? 'passada' : ''}"><span class="tl-dt">${rotuloNo(v, st)}</span>
+    const meta = fmtPeriodo(v);
+    let cont = '';
+    if (st === 'plan') { const n = diasEntre(hojeISO(), v.inicio); cont = n === 0 ? 'hoje' : `em ${n} dia${n===1?'':'s'}`; }
+    else if (st === 'now') { const dia = diasEntre(v.inicio, hojeISO()) + 1, tot = v.fim ? diasEntre(v.inicio, v.fim) + 1 : null; cont = `dia ${dia}${tot ? ' de ' + tot : ''}`; }
+    else cont = 'concluída';
+    const corpo = grande ? `<b class="tl-nome">${esc(v.nome)}</b><span class="tl-meta">${meta}</span>` : `<b>${esc(v.nome)}</b><span class="tl-meta">${meta}</span>`;
+    return `<div class="tl-no ${grande ? 'atual' : ''} ${st === 'ok' || st === 'end' ? 'passada' : ''}"><span class="tl-dt">${rotuloNo(v, st)}<small>${cont}</small></span>
       <a class="tl-card ${grande ? 'grande' : ''}" href="#/v/${v.id}">${corpo}</a></div>`;
   }).join('');
   $app.innerHTML = `
@@ -1478,7 +1474,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-27';
+const VERSAO = '2026-10-27-28';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
