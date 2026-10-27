@@ -1249,7 +1249,7 @@ function corpoRoteiro(v){
     ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}
     <div class="grp">${lista}<button class="row r-add2" data-est=""><span class="tx"><b>${icr('plus',16,2.2)} Adicionar local</b></span></button></div>${dias}`;
 }
-const MAPS_KEY = '';
+const MAPS_KEY = 'AIzaSyAjOZg82ipuelK382ysZjMxIXxC3tkxeEA';
 function carregarGoogle(){
   if (window.google && google.maps) return Promise.resolve(true);
   return window._gm || (window._gm = new Promise(ok => {
@@ -1447,7 +1447,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-21';
+const VERSAO = '2026-10-27-22';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
