@@ -119,6 +119,8 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .fundo-t{font-size:28px;font-weight:800;letter-spacing:-.03em}.fundo-s{font-size:13px}
 .sheet2{flex:1;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(var(--tab) + env(safe-area-inset-bottom,0px) - 8px);display:flex;flex-direction:column;gap:12px}
 .sheet2 .grab{margin-bottom:-2px}
+.sheet2.c{flex:none;gap:10px;padding-bottom:16px}.vrow{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px 2px;cursor:text}.vrow>span{font-size:13px;color:var(--muted)}.vrow b{display:flex;align-items:baseline;gap:6px;font-weight:300}.vrow i{font-style:normal;font-size:22px;color:var(--muted2)}.vrow input{border:0;outline:none;background:transparent;font:300 34px Manrope,sans-serif;letter-spacing:-.03em;min-width:1ch;text-align:right;padding:0;caret-color:var(--acc);color:var(--ink)}.vrow input::placeholder{color:#C7C7CC}
+.pills2.m{justify-content:flex-start;gap:7px}.pills2.m .pl{height:30px;padding:0 11px;font-size:12.5px;font-weight:600;gap:5px}.drow{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:.5px solid var(--sep);padding:8px 2px 2px;cursor:text}.drow>span{font-size:13px;color:var(--muted)}.drow .desc{text-align:right;font-size:15px;padding:4px 0}
 .sh2{display:flex;justify-content:space-between;align-items:center}
 .eyb{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
 .data input{border:0;background:var(--fill);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:600;color:var(--ink);-webkit-appearance:none;appearance:none;min-height:32px}
@@ -712,19 +714,6 @@ function fmtDigitado(s){
   const [i, d] = s.split(',');
   return 'R$ ' + Number(i || 0).toLocaleString('pt-BR') + (d !== undefined ? ',' + d : '');
 }
-function tecla(k){
-  let s = F.valor || '';
-  if (k === 'apagar') s = s.slice(0, -1);
-  else if (k === ',') { if (!s.includes(',')) s = (s || '0') + ','; }
-  else {
-    if (s.includes(',')) { if (s.split(',')[1].length >= 2) return; s += k; }
-    else { if (s.replace(/^0+/, '').length >= 7) return; s = (s === '0' ? '' : s) + k; }
-  }
-  F.valor = s;
-  const el = document.getElementById('valor');
-  el.textContent = fmtDigitado(s); el.classList.toggle('zero', !parseValor(s));
-  const pr = document.getElementById('previa'); if (pr) pr.textContent = previa();
-}
 function fmtDataPill(iso){
   const dd = diasEntre(iso, hojeISO());
   if (dd === 0) return 'Hoje';
@@ -788,29 +777,34 @@ function telaGasto(viagemId, gastoId){
           : { k, viagem_id: vid, valor: '', descricao: '', categoria: 'comida', pagou: eu || 'S', divisao: 'metade', pct: 50, data: hojeISO() };
   }
   const v = viagem(F.viagem_id);
-  const teclas = ['1','2','3','4','5','6','7','8','9',',','0','apagar'];
   $app.classList.add('folha');
   $app.innerHTML = `
   <a class="fundo" href="#/v/${vid}" aria-label="Voltar para a viagem"><span class="fundo-v">${sv(IC.voltar,22,2.4)} Voltar</span><span class="fundo-t">${esc(v.nome)}</span><span class="fundo-s">${fmtPeriodo(v)}</span></a>
-  <form id="f-gasto" class="sheet2">
+  <form id="f-gasto" class="sheet2 c">
     <span class="grab"></span>
     <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar despesa' : 'Registrar despesa'}</h1>
-    <div class="valor ${parseValor(F.valor) ? '' : 'zero'}" id="valor" aria-live="polite" style="margin-top:10px">${fmtDigitado(F.valor)}</div>
-    <div class="pills2">
-      <button type="button" class="pl on" id="p-cat">${sv(icCat(F.categoria),16,2)}${catNome(F.categoria)}</button>
-      <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:20px;height:20px;font-size:10px">${F.pagou}</span>${NOME[F.pagou]}</button>
-      ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,16,2)}${esc(v.nome)}</button>` : ''}
+    <label class="vrow" for="in-valor"><span>Valor</span><b><i>R$</i><input id="in-valor" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(F.valor)}" aria-label="Valor da despesa"></b></label>
+    <div class="pills2 m">
+      <button type="button" class="pl on" id="p-cat">${sv(icCat(F.categoria),14,2)}${catNome(F.categoria)}</button>
+      <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:16px;height:16px;font-size:9px">${F.pagou}</span>${NOME[F.pagou]}</button>
+      ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,14,2)}${esc(v.nome)}</button>` : ''}
+      ${F.descricao || F.mostrarDesc ? '' : '<button type="button" class="pl" id="p-desc">Descrição</button>'}
     </div>
-    <label for="in-desc" style="position:absolute;width:1px;height:1px;overflow:hidden">Descrição</label>
-    <input id="in-desc" class="desc" placeholder="Descrição (opcional)" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done">
-    <div class="keys">${teclas.map(t => `<button type="button" data-k="${t}" ${t==='apagar'?'aria-label="Apagar"':''}>${t === 'apagar' ? sv('<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12 9l5 6M17 9l-5 6"/>',26,1.7) : t}</button>`).join('')}</div>
+    ${F.descricao || F.mostrarDesc ? `<label for="in-desc" class="drow"><span>Descrição</span><input id="in-desc" class="desc" placeholder="Opcional" value="${esc(F.descricao)}" autocomplete="off" enterkeyhint="done"></label>` : ''}
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
       <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Registrar despesa'}</button></div>
   </form>${tabbar('gastos')}`;
   const desenhar = () => telaGasto(viagemId, gastoId);
-  document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
-  document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
+  const iv = document.getElementById('in-valor'), larg = () => { iv.style.width = (Math.max(1, iv.value.length) + .3) + 'ch'; }; larg();
+  iv.oninput = () => { let t = iv.value.replace(/\./g, ',').replace(/[^\d,]/g, ''); const p = t.indexOf(',');
+    if (p >= 0) t = t.slice(0, p + 1) + t.slice(p + 1).replace(/,/g, '').slice(0, 2); else t = t.replace(/^0+(?=\d)/, '').slice(0, 7);
+    if (iv.value !== t) iv.value = t; F.valor = t; larg(); };
+  const idc = document.getElementById('in-desc');
+  if (idc) { idc.oninput = e => F.descricao = e.target.value; idc.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }; }
+  const pd = document.getElementById('p-desc');
+  if (pd) pd.onclick = () => { F.mostrarDesc = true; desenhar(); setTimeout(() => { const d = document.getElementById('in-desc'); if (d) d.focus(); }, 30); };
+  if (!g && !F.valor && !F.mostrarDesc) setTimeout(() => { try { iv.focus(); } catch(e){} }, 120);
   document.getElementById('p-cat').onclick = async () => {
     let r = await escolher('Categoria', [...CATS.map(c => ({ v: c.id, t: c.nome, ic: `<span class="cat-ic" style="background:${c.cor}">${sv(icCat(c.id),18,2)}</span>` })), { v: '__nova', t: 'Nova categoria', ic: `<span class="cat-ic nova">${sv(IC.plus,18,2.2)}</span>` }], F.categoria);
     if (r === '__nova') r = await editarCategoria(null);
@@ -825,12 +819,7 @@ function telaGasto(viagemId, gastoId){
     const r = await escolher('Viagem', D.viagens.map(x => ({ v: x.id, t: esc(x.nome) })), F.viagem_id);
     if (r && r !== F.viagem_id) { F.viagem_id = r; F.k = 'n:' + r; store.set('vd_atual', r); history.replaceState(null,'','#/novo/' + r); telaGasto(r, null); }
   };
-  $app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => tecla(b.dataset.k));
-  document.onkeydown = e => {
-    if (document.querySelector('.veil')) return;
-    if (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
-    if (/^[0-9]$/.test(e.key)) tecla(e.key); else if (e.key === ',' || e.key === '.') tecla(','); else if (e.key === 'Backspace') tecla('apagar');
-  };
+  document.onkeydown = null;
   document.getElementById('f-gasto').onsubmit = salvarGasto;
   const bx = document.getElementById('bt-excluir');
   if (bx) bx.onclick = async () => {
@@ -856,7 +845,7 @@ function previa(){
 async function salvarGasto(ev){
   ev.preventDefault();
   const valor = parseValor(F.valor);
-  if (!(valor > 0)) { toast('Digite o valor no teclado'); return; }
+  if (!(valor > 0)) { toast('Digite o valor da despesa'); return; }
   const v = viagem(F.viagem_id), antes = resumo(v.id).total;
   const bt = document.getElementById('bt-salvar'); bt.disabled = true; bt.textContent = 'Salvando…';
   const p = { viagem_id: F.viagem_id, valor, descricao: F.descricao.trim(), categoria: F.categoria, pagou: F.pagou, divisao: F.divisao,
@@ -1494,7 +1483,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-39';
+const VERSAO = '2026-10-27-41';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
