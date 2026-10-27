@@ -673,7 +673,7 @@ function telaViagem(id, aba){
   const linhaI = (href, ic, t, s) => `<a class="ra" href="${href}"><span class="ra-i">${icr(ic,20,1.3)}</span><span class="ra-t"><b>${t}</b>${s ? `<span>${s}</span>` : ''}</span>${sv(IC.seta,16,1.5)}</a>`;
   const inicio = `<div class="lstA">
     ${linhaI('#/novo/'+id, 'plus', 'Registrar compra', '')}
-    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Financeiro', r.gs.length ? brl(r.total) + ' até agora' : 'Nada registrado ainda')}
+    ${linhaI('#/v/'+id+'/gastos', 'moeda', 'Financeiro', r.gs.length ? brl(r.total) + ' até agora' : 'Sem compras registradas')}
     ${linhaI('#/v/'+id+'/lugares', 'rota', 'Roteiro', nD ? `${nL} ${nL === 1 ? 'local' : 'locais'} · ${nD} ${nD === 1 ? 'dia' : 'dias'}` : 'Dias e lugares')}
     ${linhaI('#/v/'+id+'/reservas', 'voo', 'Reservas', nR ? `${nR} ${nR === 1 ? 'passagem' : 'passagens'}` : 'Passagens')}
     ${linhaI('#/v/'+id+'/hospedagens', 'bed', 'Hospedagens', nH ? `${nH} ${nH === 1 ? 'hospedagem' : 'hospedagens'}` : 'Hotel, Airbnb e outros')}</div>`;
@@ -1489,7 +1489,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-45';
+const VERSAO = '2026-10-27-46';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
