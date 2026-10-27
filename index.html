@@ -113,8 +113,9 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .legend b{font-weight:700;color:var(--ink)}
 #app.folha{padding:0;gap:0;background:#8E8E93;min-height:100vh;min-height:100dvh}
 .fundo{display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 22px) 20px 18px;color:#fff;opacity:.75;min-height:96px}
+.fundo-v{display:flex;align-items:center;gap:2px;font-size:16px;font-weight:600;margin:0 0 6px -4px;color:#fff}
 .fundo-t{font-size:28px;font-weight:800;letter-spacing:-.03em}.fundo-s{font-size:13px}
-.sheet2{flex:1;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;flex-direction:column;gap:12px}
+.sheet2{flex:1;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(var(--tab) + env(safe-area-inset-bottom,0px) - 8px);display:flex;flex-direction:column;gap:12px}
 .sheet2 .grab{margin-bottom:-2px}
 .sh2{display:flex;justify-content:space-between;align-items:center}
 .eyb{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
@@ -216,8 +217,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .icones button[aria-pressed="true"]{background:var(--acc);color:#fff}
 .veil .sheet{max-height:92vh;overflow-y:auto}
 /* roteiro, lugares e reservas */
-.r-onde{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
-.r-onde::-webkit-scrollbar{display:none}
+.r-onde{display:flex;flex-wrap:wrap;gap:8px}
 .r-ch{flex:none;border:1px solid var(--fill2);background:#fff;border-radius:12px;padding:7px 12px;display:flex;flex-direction:column;gap:1px;text-align:left;cursor:pointer;color:var(--ink)}
 .r-ch b{font-size:13px;font-weight:700}.r-ch span{font-size:11.5px;color:var(--muted)}
 .r-ch.on{border-color:var(--acc);background:var(--acc-soft)}.r-ch.on b{color:var(--acc)}
@@ -702,7 +702,7 @@ function telaGasto(viagemId, gastoId){
   const teclas = ['1','2','3','4','5','6','7','8','9',',','0','apagar'];
   $app.classList.add('folha');
   $app.innerHTML = `
-  <a class="fundo" href="#/v/${vid}" aria-label="Fechar"><span class="fundo-t">${esc(v.nome)}</span><span class="fundo-s">${fmtPeriodo(v)}</span></a>
+  <a class="fundo" href="#/v/${vid}" aria-label="Voltar para a viagem"><span class="fundo-v">${sv(IC.voltar,22,2.4)} Voltar</span><span class="fundo-t">${esc(v.nome)}</span><span class="fundo-s">${fmtPeriodo(v)}</span></a>
   <form id="f-gasto" class="sheet2">
     <span class="grab"></span>
     <h1 style="position:absolute;width:1px;height:1px;overflow:hidden">${g ? 'Editar gasto' : 'Novo gasto'}</h1>
@@ -718,7 +718,7 @@ function telaGasto(viagemId, gastoId){
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
       <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Novo gasto'}</button></div>
-  </form>`;
+  </form>${tabbar('novo')}`;
   const desenhar = () => telaGasto(viagemId, gastoId);
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
@@ -1283,7 +1283,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-12';
+const VERSAO = '2026-10-27-13';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
