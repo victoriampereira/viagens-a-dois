@@ -180,6 +180,27 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .hb{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:10px;font-size:13px;padding:7px 0}
 .hb div{height:10px;background:var(--fill2);border-radius:99px;overflow:hidden}.hb i{display:block;height:100%;border-radius:99px}
 .hb b{text-align:right;font-weight:700;min-width:64px}
+
+.lg{display:flex;flex-direction:column}
+.lg-it{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--sep);font-size:15px}
+.lg-it:last-child{border-bottom:0}
+.lg-n{flex:1}.lg-p{color:var(--muted);font-size:13px}.lg-it b{font-weight:700;min-width:82px;text-align:right}
+.lg-it .dot{width:10px;height:10px}
+.cal-sheet{gap:10px}
+.cal-top{display:flex;justify-content:space-between;align-items:center}.cal-top b{font-size:17px}
+.cal-nav{width:44px;height:44px;border:0;background:var(--fill);border-radius:50%;display:grid;place-items:center;color:var(--acc);cursor:pointer}
+.cal-sem,.cal-grade{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-sem span{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:4px 0}
+.cal-grade{row-gap:4px}
+.dia{height:44px;border:0;background:transparent;padding:0;cursor:pointer;position:relative;display:grid;place-items:center;font-size:16px;font-weight:600;color:var(--ink)}
+.dia span{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;position:relative;z-index:1}
+.dia.hoje span{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.dia.meio{background:var(--acc-soft);color:var(--acc)}
+.dia.ini span,.dia.fim span{background:var(--acc);color:#fff;box-shadow:none}
+.dia.ini.liga{background:linear-gradient(90deg,transparent 50%,var(--acc-soft) 50%)}
+.dia.fim:not(.ini){background:linear-gradient(90deg,var(--acc-soft) 50%,transparent 50%)}
+.cal-res{display:flex;justify-content:space-between;align-items:center;background:var(--fill);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted2)}
+.cal-res b{color:var(--acc);font-size:16px}
 </style>
 </head>
 <body>
@@ -393,7 +414,7 @@ function telaViagens(){
     const r = resumo(v.id), st = status(v), lim = Number(v.limite) || 0, grande = dest && v.id === dest.id;
     let meta = fmtPeriodo(v);
     if (st === 'plan') { const n = diasEntre(hojeISO(), v.inicio); meta += ` · faltam ${n} dia${n===1?'':'s'}`; if (lim && !grande) meta += ` · limite ${brl(lim)}`; }
-    else if (!grande) meta += ` · ${brl(r.total)}${st === 'ok' ? ' · acertada' : ''}`;
+    else if (!grande) meta += ` · ${brl(r.total)}`;
     let corpo;
     if (grande) {
       let tag = STATUS_TXT[st];
@@ -431,58 +452,81 @@ function anel(r, lim){
 }
 function tamValor(txt){ return Math.max(20, Math.min(34, Math.floor(158 / (txt.length * 0.6)))); }
 function tamBloco(txt){ return Math.max(16, Math.min(24, Math.floor(146 / (txt.length * 0.6)))); }
-function telaViagem(id, abaUrl){
+function horaDe(g){
+  if (!g.criado_em || g.criado_em.length < 16) return '';
+  const d = new Date(g.criado_em); if (isNaN(d)) return '';
+  if (isoDe(d) !== g.data) return '';
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function listaGastos(gs){
+  gs = [...gs].sort((a,b) => a.data !== b.data ? (a.data < b.data ? 1 : -1) : ((a.criado_em || '') < (b.criado_em || '') ? 1 : -1));
+  let html = '', ult = null, abertos = false;
+  gs.forEach(g => {
+    if (g.data !== ult) { if (abertos) html += '</div>'; ult = g.data; html += `<div class="sh">${fmtGrupo(g.data)}</div><div class="grp">`; abertos = true; }
+    const h = horaDe(g);
+    html += `<a class="row" href="#/gasto/${g.id}"><span class="av ${g.pagou}">${g.pagou}</span>
+      <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${catNome(g.categoria)}${h ? ' · ' + h : ''}</span></span>
+      <span class="val">${brl(g.valor)}</span>${CHEV}</a>`;
+  });
+  return html + (abertos ? '</div>' : '');
+}
+function telaViagem(id){
   const v = viagem(id); if (!v) return naoAchou();
   store.set('vd_atual', id);
   const st = status(v);
-  let aba = abaUrl || abaViagem[id] || 'todos';
-  if (!['todos','S','V'].includes(aba)) aba = 'todos';
   const r = resumo(id), lim = Number(v.limite) || 0;
   let info = fmtPeriodo(v);
   if (st === 'now') { const dia = diasEntre(v.inicio, hojeISO()) + 1, tot = v.fim ? diasEntre(v.inicio, v.fim) + 1 : null; info += ` · dia ${dia}${tot ? ' de ' + tot : ''}`; }
-  else info += (info ? ' · ' : '') + STATUS_TXT[st].toLowerCase();
+  else if (v.inicio && v.fim) { const n = diasEntre(v.inicio, v.fim) + 1; info += ` · ${n} dia${n===1?'':'s'}`; }
   if (v.destino) info = esc(v.destino) + ' · ' + info;
-  // por dia
   let dias = 0;
   if (v.inicio) {
     if (st === 'now') dias = diasEntre(v.inicio, hojeISO()) + 1;
     else if (st !== 'plan' && v.fim) dias = diasEntre(v.inicio, v.fim) + 1;
   }
   const porDia = dias ? brl(Math.round(r.total / dias)) : '—';
-  let subDia = dias ? `${dias} dia${dias===1?'':'s'}` : (st === 'plan' ? 'ainda não começou' : '');
+  let subDia = dias ? `em ${dias} dia${dias===1?'':'s'}` : (st === 'plan' ? 'ainda não começou' : '');
   if (st === 'now' && lim && v.fim && r.total < lim) { const dl = diasEntre(hojeISO(), v.fim) + 1; if (dl > 0) subDia = `restam ~${brl(Math.floor((lim - r.total)/dl))}/dia`; }
   const bloco = (lbl, val, sub, escuro) => `<div class="bloco${escuro ? ' escuro' : ''}"><span class="b-l">${lbl}</span><b style="font-size:${tamBloco(val)}px">${val}</b><span class="b-s">${sub}</span></div>`;
   const totalSub = lim ? (r.total > lim ? `passou ${brl(r.total - lim)} do limite` : `de ${brl(lim)} · ${Math.round(r.total/lim*100)}%`) : `<a href="#/limite/${id}" style="color:inherit;text-decoration:underline">definir limite</a>`;
   const fat = CATS.filter(c => r.cat[c.id] > 0).sort((a,b) => r.cat[b.id] - r.cat[a.id]);
-  const maior = fat.length ? r.cat[fat[0].id] : 1;
-  const barras = fat.map(c => `<div class="hb"><span>${c.nome}</span><div><i style="width:${r.cat[c.id]/maior*100}%;background:${CAT_COR[c.id]}"></i></div><b>${brl(r.cat[c.id])}</b></div>`).join('');
-  const lista = aba === 'todos' ? r.gs : r.gs.filter(g => g.pagou === aba);
-  let html = '', ult = null, abertos = false;
-  lista.forEach(g => {
-    if (g.data !== ult) { if (abertos) html += '</div>'; ult = g.data; html += `<div class="sh">${fmtGrupo(g.data)}</div><div class="grp">`; abertos = true; }
-    html += `<a class="row" href="#/gasto/${g.id}"><span class="av ${g.pagou}">${g.pagou}</span>
-      <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${catNome(g.categoria)}${g.divisao !== 'metade' ? ' · ' + divTxt(g) : ''}</span></span>
-      <span class="val">${brl(g.valor)}</span>${CHEV}</a>`;
-  });
-  if (abertos) html += '</div>';
-  const vazio = aba === 'todos' ? 'Nenhum gasto ainda. Toque em Novo gasto.' : `Nenhum gasto pago ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
+  const topo = fat[0];
+  const legenda = fat.map(c => `<div class="lg-it"><span class="dot" style="background:${CAT_COR[c.id]}"></span><span class="lg-n">${c.nome}</span><span class="lg-p">${Math.round(r.cat[c.id]/r.total*100)}%</span><b>${brl(r.cat[c.id])}</b></div>`).join('');
   $app.innerHTML = `
   <nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
   <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>
   <div class="blocos">
-    ${bloco('Gasto', brl(r.total), totalSub, true)}
+    ${bloco('Gasto total', brl(r.total), totalSub, true)}
     ${bloco('Por dia', porDia, subDia)}
-    ${bloco('Sérgio pagou', brl(r.pagoS), '')}
-    ${bloco('Victoria pagou', brl(r.pagoV), '')}
   </div>
-  ${barras ? `<div class="sh">Por categoria</div><div class="grp" style="padding:8px 14px">${barras}</div>` : ''}
-  <div class="grp"><a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a></div>
-  <div class="sh">Gastos</div>
-  <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:2px" role="group" aria-label="Filtrar gastos">
-    <button data-aba="todos" aria-pressed="${aba==='todos'}">Todos</button><button data-aba="S" aria-pressed="${aba==='S'}">Sérgio</button><button data-aba="V" aria-pressed="${aba==='V'}">Victoria</button></div>
-  ${html || `<div class="grp"><div class="empty">${vazio}</div></div>`}
+  ${fat.length ? `<div class="sh">Por categoria</div>
+  <div class="grp" style="padding:16px 14px;display:flex;flex-direction:column;gap:12px">
+    <div class="ring">${anel(r, 0)}
+      <div class="ring-c"><span class="ring-l">${topo.nome}</span><span class="ring-v" style="font-size:34px">${Math.round(r.cat[topo.id]/r.total*100)}%</span><span class="ring-s">do total</span></div></div>
+    <div class="lg">${legenda}</div>
+  </div>` : ''}
+  <div class="grp">
+    <a class="row" href="#/gastos/${id}"><span class="tile">${sv('<path d="M4 6h16M4 12h16M4 18h10"/>',18,2)}</span><span class="tx"><b>Ver todos os gastos</b><span>${r.gs.length} gasto${r.gs.length===1?'':'s'} lançado${r.gs.length===1?'':'s'}</span></span>${CHEV}</a>
+    <a class="row" href="#/acerto/${id}"><span class="tile">${sv(IC.troca,18,2)}</span><span class="tx"><b>Divisão dos Gastos</b><span>${r.gs.length ? fraseSaldo(r) : 'Nada para dividir ainda'}</span></span>${CHEV}</a>
+  </div>
   ${tabbar('viagens')}`;
-  $app.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { abaViagem[id] = b.dataset.aba; history.replaceState(null, '', '#/v/' + id); telaViagem(id, b.dataset.aba); });
+}
+function telaGastos(id, abaUrl){
+  const v = viagem(id); if (!v) return naoAchou();
+  let aba = abaUrl || abaViagem[id] || 'todos';
+  if (!['todos','S','V'].includes(aba)) aba = 'todos';
+  const r = resumo(id);
+  const lista = aba === 'todos' ? r.gs : r.gs.filter(g => g.pagou === aba);
+  const soma = lista.reduce((t, g) => t + Number(g.valor), 0);
+  const vazio = aba === 'todos' ? 'Nenhum gasto ainda.' : `Nenhum gasto pago ${aba === 'S' ? 'pelo Sérgio' : 'pela Victoria'}.`;
+  $app.innerHTML = `
+  <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
+  <h1 class="t">Gastos</h1><div class="sub">${lista.length} gasto${lista.length===1?'':'s'} · ${brl(soma)}</div>
+  <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Filtrar">
+    <button data-aba="todos" aria-pressed="${aba==='todos'}">Todos</button><button data-aba="S" aria-pressed="${aba==='S'}">Sérgio</button><button data-aba="V" aria-pressed="${aba==='V'}">Victoria</button></div>
+  ${listaGastos(lista) || `<div class="grp"><div class="empty">${vazio}</div></div>`}
+  ${tabbar('viagens')}`;
+  $app.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { abaViagem[id] = b.dataset.aba; telaGastos(id, b.dataset.aba); });
 }
 
 /* --- novo / editar gasto: folha com teclado numérico --- */
@@ -546,7 +590,6 @@ function telaGasto(viagemId, gastoId){
     <div class="pills2">
       <button type="button" class="pl on" id="p-cat">${sv(IC[F.categoria],16,2)}${catNome(F.categoria)}</button>
       <button type="button" class="pl" id="p-quem"><span class="av ${F.pagou}" style="width:20px;height:20px;font-size:10px">${F.pagou}</span>${NOME[F.pagou]}</button>
-      <label class="pl" id="p-data">${fmtDataPill(F.data)}<input id="in-data" type="date" value="${F.data}" aria-label="Data"></label>
       ${!g && D.viagens.length > 1 ? `<button type="button" class="pl" id="p-viag">${sv(IC.mala,16,2)}${esc(v.nome)}</button>` : ''}
     </div>
     <label for="in-desc" style="position:absolute;width:1px;height:1px;overflow:hidden">Descrição</label>
@@ -559,7 +602,6 @@ function telaGasto(viagemId, gastoId){
   const desenhar = () => telaGasto(viagemId, gastoId);
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
-  document.getElementById('in-data').onchange = e => { F.data = e.target.value || hojeISO(); desenhar(); };
   document.getElementById('p-cat').onclick = async () => {
     const r = await escolher('Categoria', CATS.map(c => ({ v: c.id, t: c.nome, ic: sv(IC[c.id],22,1.8) })), F.categoria);
     if (r) { F.categoria = r; desenhar(); }
@@ -636,7 +678,7 @@ function telaAcerto(id){
       <button class="btn-plain" data-desfaz="${a.id}" style="width:auto;height:36px;font-size:15px">Desfazer</button></div>`).join('');
   $app.innerHTML = `
   <nav class="nav"><a href="#/v/${id}">${sv(IC.voltar,22,2.2)} ${esc(v.nome)}</a><span></span></nav>
-  <h1 class="t">Divisão dos gastos</h1><div class="sub">Para ficar como combinaram até agora</div>
+  <h1 class="t">Divisão dos Gastos</h1>
   <div class="card" style="align-items:center;gap:14px;padding:22px 16px">
     ${zerado ? `<b style="font-size:24px">Tudo certo</b><span style="color:var(--muted);font-size:15px">Ninguém deve nada nesta viagem.</span>` : `
     <div style="display:flex;align-items:center;gap:14px"><span class="av lg ${deve}">${deve}</span>
@@ -687,14 +729,69 @@ async function salvarViagem(p, msg){
   try { const nid = await rpc('vd_salvar_viagem', { p }); await carregar(); if (msg) toast(msg); return nid; }
   catch(e){ toast(e.message); return null; }
 }
+const MESES_L = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function isoDe(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function textoDatas(ini, fim){
+  if (!ini) return '';
+  const n = fim ? diasEntre(ini, fim) + 1 : 1;
+  return fmtPeriodo({ inicio: ini, fim: fim || ini }) + ` · ${n} dia${n===1?'':'s'}`;
+}
+function escolherDatas(ini, fim){
+  return new Promise(res => {
+    let a = ini || null, b = fim || null;
+    const base = a ? dataObj(a) : new Date();
+    let mes = new Date(base.getFullYear(), base.getMonth(), 1);
+    const w = document.createElement('div'); w.className = 'veil';
+    document.body.appendChild(w);
+    const fim_ = val => { w.remove(); res(val); };
+    function desenhar(){
+      const ano = mes.getFullYear(), m = mes.getMonth(), primeiro = new Date(ano, m, 1).getDay(), total = new Date(ano, m + 1, 0).getDate(), hoje = hojeISO();
+      let cel = '';
+      for (let i = 0; i < primeiro; i++) cel += '<span></span>';
+      for (let d = 1; d <= total; d++) {
+        const iso = isoDe(new Date(ano, m, d));
+        let cls = '';
+        if (a && iso === a) cls = 'ini';
+        if (b && iso === b) cls = a === b ? 'ini fim' : 'fim';
+        if (a && b && iso > a && iso < b) cls = 'meio';
+        if (cls.includes('ini') && b && b !== a) cls += ' liga';
+        cel += `<button type="button" class="dia ${cls}${iso === hoje ? ' hoje' : ''}" data-d="${iso}" aria-pressed="${!!cls}"><span>${d}</span></button>`;
+      }
+      const n = a ? (b ? diasEntre(a, b) + 1 : 1) : 0;
+      const resumo = !a ? 'Toque no dia da ida' : !b ? `Ida ${fmtDia(a)} · agora toque na volta` : `${fmtPeriodo({inicio:a, fim:b})}`;
+      w.innerHTML = `<div class="sheet cal-sheet" role="dialog" aria-modal="true" aria-label="Datas da viagem"><span class="grab"></span>
+        <h3>Datas da viagem</h3>
+        <div class="cal-top"><button type="button" class="cal-nav" data-m="-1" aria-label="Mês anterior">${sv(IC.voltar,22,2.2)}</button>
+          <b>${MESES_L[m]} ${ano}</b><button type="button" class="cal-nav" data-m="1" aria-label="Próximo mês" style="transform:scaleX(-1)">${sv(IC.voltar,22,2.2)}</button></div>
+        <div class="cal-sem">${['D','S','T','Q','Q','S','S'].map(x => `<span>${x}</span>`).join('')}</div>
+        <div class="cal-grade">${cel}</div>
+        <div class="cal-res"><span>${resumo}</span>${n ? `<b>${n} dia${n===1?'':'s'}</b>` : ''}</div>
+        <button type="button" class="btn" id="cal-ok" ${a ? '' : 'disabled'}>Confirmar</button>
+        <button type="button" class="btn-plain" id="cal-x">Cancelar</button></div>`;
+      w.querySelectorAll('[data-m]').forEach(x => x.onclick = () => { mes = new Date(ano, m + Number(x.dataset.m), 1); desenhar(); });
+      w.querySelectorAll('[data-d]').forEach(x => x.onclick = () => {
+        const d = x.dataset.d;
+        if (!a || (a && b)) { a = d; b = null; }
+        else if (d < a) { a = d; }
+        else b = d;
+        desenhar();
+      });
+      w.querySelector('#cal-ok').onclick = () => fim_({ inicio: a, fim: b || a });
+      w.querySelector('#cal-x').onclick = () => fim_(null);
+    }
+    w.onclick = e => { if (e.target === w) fim_(null); };
+    desenhar();
+  });
+}
+let FV = null;
 function formViagem(v){
   v = v || {};
+  FV = { inicio: v.inicio || '', fim: v.fim || '' };
   return `<form id="f-viagem" style="display:flex;flex-direction:column;gap:14px">
     <div class="grp">
       <label class="row" style="cursor:text"><span class="tx" style="flex:none"><b>Nome</b></span><input class="fin" id="fv-nome" required placeholder="Ex.: Argentina 2025" value="${esc(v.nome)}"></label>
       <label class="row" style="cursor:text"><span class="tx" style="flex:none"><b>Destino</b></span><input class="fin" id="fv-dest" placeholder="Ex.: Buenos Aires" value="${esc(v.destino)}"></label>
-      <label class="row"><span class="tx" style="flex:none"><b>Ida</b></span><input class="fin" id="fv-ini" type="date" value="${v.inicio||''}"></label>
-      <label class="row"><span class="tx" style="flex:none"><b>Volta</b></span><input class="fin" id="fv-fim" type="date" value="${v.fim||''}"></label>
+      <button type="button" class="row" id="fv-datas"><span class="tx" style="flex:none"><b>Datas</b></span><span class="val" id="fv-datas-txt" style="flex:1;text-align:right">${FV.inicio ? textoDatas(FV.inicio, FV.fim) : '<span style="color:#C7C7CC">Ida e volta</span>'}</span>${CHEV}</button>
       ${v.id ? '' : `<label class="row" style="cursor:text"><span class="tx" style="flex:none"><b>Limite</b></span><input class="fin" id="fv-lim" inputmode="decimal" placeholder="Opcional"></label>`}
     </div>
     <button class="btn" type="submit">${v.id ? 'Salvar dados' : 'Criar viagem'}</button>
@@ -703,12 +800,14 @@ function formViagem(v){
 }
 function ligarFormViagem(v){
   const f = document.getElementById('f-viagem'); if (!f) return;
+  document.getElementById('fv-datas').onclick = async () => {
+    const r = await escolherDatas(FV.inicio, FV.fim); if (!r) return;
+    FV = r; document.getElementById('fv-datas-txt').textContent = textoDatas(r.inicio, r.fim);
+  };
   f.onsubmit = async ev => {
     ev.preventDefault();
-    const p = { nome: document.getElementById('fv-nome').value.trim(), destino: document.getElementById('fv-dest').value.trim(),
-                inicio: document.getElementById('fv-ini').value, fim: document.getElementById('fv-fim').value };
+    const p = { nome: document.getElementById('fv-nome').value.trim(), destino: document.getElementById('fv-dest').value.trim(), inicio: FV.inicio, fim: FV.fim };
     if (!p.nome) return;
-    if (p.inicio && p.fim && p.fim < p.inicio) { toast('A volta está antes da ida'); return; }
     if (v && v.id) { p.id = v.id; salvarViagem(p, 'Viagem salva'); return; }
     p.limite = parseValor((document.getElementById('fv-lim')||{}).value);
     const nid = await salvarViagem(p, 'Viagem criada');
@@ -783,7 +882,8 @@ function render(){
   const p = (location.hash.replace(/^#\/?/, '') || '').split('/');
   window.scrollTo(0, 0);
   switch (p[0]) {
-    case 'v': return telaViagem(p[1], p[2]);
+    case 'v': return telaViagem(p[1]);
+    case 'gastos': return telaGastos(p[1]);
     case 'novo': return telaGasto(p[1] || idAtual(), null);
     case 'gasto': return telaGasto(null, p[1]);
     case 'acerto': return telaAcerto(p[1] || idAtual());
@@ -793,10 +893,10 @@ function render(){
     default: F = null; return telaViagens();
   }
 }
-function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
+function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-6';
+const VERSAO = '2026-10-27-7';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -814,7 +914,7 @@ async function checarVersao(){
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checarVersao(); });
   const m = location.hash.match(/k=([A-Za-z0-9]+)/);
   if (m) { chave = m[1]; store.set('vd_chave', chave); history.replaceState(null, '', location.pathname + location.search + '#/'); }
-  window.addEventListener('hashchange', () => { if (!/^#\/(novo|gasto)/.test(location.hash)) F = null; render(); });
+  window.addEventListener('hashchange', () => { if (!/^#\/(novo|gasto\/)/.test(location.hash)) F = null; render(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && chave && !emFormulario()) carregar(true); });
   setInterval(() => { if (chave && document.visibilityState === 'visible' && !emFormulario()) carregar(true); }, 20000);
   if (chave) carregar(); else render();
