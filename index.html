@@ -275,6 +275,7 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .so-desk{display:none!important}
 .r-mapa{height:272px;border-radius:16px;overflow:hidden;background:var(--fill);margin:4px 0 6px;position:relative;z-index:0}
 .r-mapa .leaflet-tile-pane{filter:saturate(.7) contrast(.95) brightness(1.04)}
+.r-mapa-img{width:100%;height:100%;object-fit:cover;display:block}
 .r-mapa.vazio{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;font-size:13px;color:var(--muted2);height:auto;min-height:64px}
 .r-mk{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font:700 13px/28px Manrope,sans-serif;text-align:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .r-est .r-n{width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;font:700 12px Manrope,sans-serif;display:grid;place-items:center;flex:none;margin:0 2px 0 0}.r-est .r-n.sem{background:var(--fill2);color:var(--muted2)}.r-est.on{background:var(--fill)}
@@ -1256,6 +1257,18 @@ function carregarLeaflet(){
 }
 async function desenharMapa(v){
   const el = document.getElementById('mapa'); if (!el) return;
+  const es0 = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1).filter(i => i.dados.lat).map(i => [+i.dados.lat, +i.dados.lng]);
+  const sec0 = itensDe(v.id,'atividade').filter(i => i.dados.lat).map(i => [+i.dados.lat, +i.dados.lng]);
+  const kk = JSON.stringify([es0, sec0]);
+  try {
+    window._mapas = window._mapas || {};
+    const img = window._mapas[kk] || (window._mapas[kk] = (await fnLugares({ op:'mapa', pts: es0, sec: sec0 })).img);
+    if (!document.body.contains(el)) return;
+    const ll = a => a.join(',');
+    const rota = es0.length > 1 ? `https://www.google.com/maps/dir/?api=1&origin=${ll(es0[0])}&destination=${ll(es0[es0.length-1])}${es0.length > 2 ? '&waypoints=' + es0.slice(1,-1).map(ll).join('|') : ''}` : `https://www.google.com/maps/search/?api=1&query=${ll(es0[0])}`;
+    el.innerHTML = `<a href="${rota}" target="_blank" rel="noopener" aria-label="Abrir no Google Maps"><img class="r-mapa-img" src="${img}" alt="Mapa dos locais"></a>`;
+    return;
+  } catch(e){ window._mapas && delete window._mapas[kk]; }
   try { await carregarLeaflet(); } catch(e){ el.className = 'r-mapa vazio'; el.textContent = 'Não consegui carregar o mapa agora.'; return; }
   if (!document.body.contains(el)) return;
   const es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
@@ -1412,7 +1425,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-19';
+const VERSAO = '2026-10-27-20';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
