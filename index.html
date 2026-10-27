@@ -177,7 +177,7 @@ const IC = {
 };
 const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6"/></svg>`;
 const CATS = [
-  { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Comida' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
+  { id:'passagens', nome:'Passagens' }, { id:'comida', nome:'Alimentação' }, { id:'transporte', nome:'Transporte' }, { id:'hospedagem', nome:'Hospedagem' },
   { id:'passeios', nome:'Passeios' }, { id:'compras', nome:'Compras' }, { id:'outros', nome:'Outros' }
 ];
 const catNome = id => (CATS.find(c => c.id === id) || CATS[CATS.length-1]).nome;
@@ -236,10 +236,12 @@ function status(v){
   return (r.gs.length && Math.abs(r.saldoS) < 0.01) ? 'ok' : 'end';
 }
 const STATUS_TXT = { now:'Em andamento', plan:'Planejada', ok:'Acertada', end:'Encerrada' };
-function destaque(){
-  const now = D.viagens.find(v => status(v) === 'now'); if (now) return now;
-  return D.viagens.filter(v => status(v) === 'plan').sort((a,b) => a.inicio < b.inicio ? -1 : 1)[0] || null;
-}
+const ehProxima = v => { const st = status(v); return st === 'now' || st === 'plan'; };
+const porData = (a,b) => (a.inicio || '9999') < (b.inicio || '9999') ? -1 : 1;
+function proximas(){ return D.viagens.filter(ehProxima).sort((a,b) => (status(a)==='now') !== (status(b)==='now') ? (status(a)==='now' ? -1 : 1) : porData(a,b)); }
+function anteriores(){ return D.viagens.filter(v => !ehProxima(v)).sort((a,b) => porData(b,a)); }
+/* a viagem em destaque é sempre a mais próxima: a que está acontecendo, senão a próxima a começar, senão a última que passou */
+function destaque(){ return proximas()[0] || anteriores()[0] || null; }
 function idAtual(){
   const salvo = store.get('vd_atual'); if (salvo && viagem(salvo)) return salvo;
   const d = destaque(); if (d) return d.id;
@@ -296,13 +298,15 @@ function telaEntrar(){
 
 function telaViagens(){
   const dest = destaque();
-  const outras = D.viagens.filter(v => !dest || v.id !== dest.id);
+  const prox = proximas().filter(v => !dest || v.id !== dest.id);
+  const ant = anteriores().filter(v => !dest || v.id !== dest.id);
   let cartao = '';
   if (dest) {
     const r = resumo(dest.id), lim = Number(dest.limite) || 0, st = status(dest);
     let linha;
     if (st === 'now') { const dia = diasEntre(dest.inicio, hojeISO()) + 1, tot = dest.fim ? diasEntre(dest.inicio, dest.fim) + 1 : null; linha = `Dia ${dia}${tot ? ' de ' + tot : ''}`; }
-    else { const n = diasEntre(hojeISO(), dest.inicio); linha = `Faltam ${n} dia${n===1?'':'s'}`; }
+    else if (st === 'plan') { const n = diasEntre(hojeISO(), dest.inicio); linha = `Faltam ${n} dia${n===1?'':'s'}`; }
+    else linha = `${r.gs.length} gasto${r.gs.length===1?'':'s'}`;
     const al = alertaDe(dest, r);
     cartao = `<a href="#/v/${dest.id}" class="card" style="color:inherit;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:center"><span class="tag ${st}">${STATUS_TXT[st]}</span><span style="font-size:13px;color:var(--muted)">${fmtPeriodo(dest)}</span></div>
@@ -315,7 +319,7 @@ function telaViagens(){
     cartao = `<div class="card" style="gap:6px"><b style="font-size:20px">${D.viagens.length ? 'Nenhuma viagem agora' : 'A primeira viagem'}</b>
       <span style="color:var(--muted);font-size:15px">${D.viagens.length ? 'Que tal planejar a próxima?' : 'Criem uma viagem para começar. Pode ser uma que já passou, como a Argentina 2025.'}</span></div>`;
   }
-  const lista = outras.map(v => {
+  const lista = vs => vs.map(v => {
     const r = resumo(v.id), st = status(v), lim = Number(v.limite);
     const det = [fmtPeriodo(v), st === 'plan' ? (lim ? 'limite ' + brl(lim) : '') : brl(r.total)].filter(Boolean).join(' · ');
     return `<a class="row" href="#/v/${v.id}"><span class="tx"><b>${esc(v.nome)}</b><span>${det}</span></span><span class="tag ${st}">${STATUS_TXT[st]}</span>${CHEV}</a>`;
@@ -325,7 +329,8 @@ function telaViagens(){
     <a href="#/nova-viagem" aria-label="Nova viagem">${sv(IC.plus,26,2)}</a></nav>
   <h1 class="t">Viagens</h1>
   ${cartao}
-  ${outras.length ? `<div class="sh">Próximas e anteriores</div><div class="grp">${lista}</div>` : ''}
+  ${prox.length ? `<div class="sh">Próximas viagens</div><div class="grp">${lista(prox)}</div>` : ''}
+  ${ant.length ? `<div class="sh">Viagens anteriores</div><div class="grp">${lista(ant)}</div>` : ''}
   <div class="grp"><a class="row" href="#/nova-viagem" style="color:var(--acc);font-weight:600"><span class="tile" style="background:transparent;color:var(--acc);width:auto">${sv(IC.plus,22,2)}</span><span class="tx"><b style="color:var(--acc)">Nova viagem</b></span></a></div>
   ${tabbar('viagens')}`;
 }
@@ -353,7 +358,7 @@ function telaViagem(id, abaUrl){
     r.gs.forEach(g => {
       if (g.data !== ult) { if (abertos) html += '</div>'; ult = g.data; html += `<div class="sh">${fmtGrupo(g.data)}</div><div class="grp">`; abertos = true; }
       html += `<a class="row" href="#/gasto/${g.id}"><span class="av ${g.pagou}">${g.pagou}</span>
-        <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${catNome(g.categoria)} · ${divTxt(g)}</span></span>
+        <span class="tx"><b>${esc(g.descricao || catNome(g.categoria))}</b><span>${catNome(g.categoria)}${g.divisao !== 'metade' ? ' · ' + divTxt(g) : ''}</span></span>
         <span class="val">${brl(g.valor)}</span>${CHEV}</a>`;
     });
     if (abertos) html += '</div>';
@@ -421,13 +426,6 @@ function telaGasto(viagemId, gastoId){
       ${['S','V'].map(p => `<button type="button" data-pagou="${p}" aria-pressed="${F.pagou===p}">${NOME[p]}</button>`).join('')}</div>
     <div class="sh">Categoria</div>
     <div class="cats" role="group" aria-label="Categoria">${CATS.map(c => `<button type="button" data-cat="${c.id}" aria-pressed="${F.categoria===c.id}">${sv(IC[c.id],22,1.8)}${c.nome}</button>`).join('')}</div>
-    <div class="sh">Divisão</div>
-    <div class="seg" style="grid-template-columns:1fr 1.35fr .8fr" role="group" aria-label="Divisão">
-      <button type="button" data-div="metade" aria-pressed="${F.divisao==='metade'}">Metade cada</button>
-      <button type="button" data-div="pagador" aria-pressed="${F.divisao==='pagador'}">Só de quem pagou</button>
-      <button type="button" data-div="outra" aria-pressed="${F.divisao==='outra'}">Outra</button></div>
-    ${F.divisao === 'outra' ? `<div class="grp" style="padding:12px 16px"><label for="in-pct" style="font-size:14px">Parte do Sérgio: <b id="pct-a">${F.pct}%</b> · Victoria: <b id="pct-b">${100-F.pct}%</b></label>
-      <input id="in-pct" type="range" min="0" max="100" step="5" value="${F.pct}"></div>` : ''}
     ${g ? '<div class="grp"><button class="row danger" type="button" id="bt-excluir" style="justify-content:center;font-weight:600">Excluir gasto</button></div>' : ''}
     <div style="height:96px"></div>
     <div class="bottom"><span class="hint" id="previa">${previa()}</span><button class="btn" type="submit" id="bt-salvar">${g ? 'Salvar' : 'Lançar gasto'}</button></div>
@@ -438,13 +436,10 @@ function telaGasto(viagemId, gastoId){
   iv.oninput = () => { F.valor = iv.value.replace(/[^\d,.]/g,''); upd(); };
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-data').onchange = e => F.data = e.target.value || hojeISO();
-  const ip = document.getElementById('in-pct');
-  if (ip) ip.oninput = () => { F.pct = Number(ip.value); document.getElementById('pct-a').textContent = F.pct + '%'; document.getElementById('pct-b').textContent = (100-F.pct) + '%'; upd(); };
   const sel = document.getElementById('sel-v');
   if (sel) sel.onchange = () => { F.viagem_id = sel.value; F.k = 'n:' + sel.value; store.set('vd_atual', sel.value); history.replaceState(null,'','#/novo/' + sel.value); upd(); };
   $app.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { F.categoria = b.dataset.cat; $app.querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   $app.querySelectorAll('[data-pagou]').forEach(b => b.onclick = () => { F.pagou = b.dataset.pagou; $app.querySelectorAll('[data-pagou]').forEach(x => x.setAttribute('aria-pressed', x === b)); upd(); });
-  $app.querySelectorAll('[data-div]').forEach(b => b.onclick = () => { F.divisao = b.dataset.div; telaGasto(viagemId, gastoId); });
   document.getElementById('f-gasto').onsubmit = salvarGasto;
   const bx = document.getElementById('bt-excluir');
   if (bx) bx.onclick = async () => {
@@ -684,7 +679,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-26-4';
+const VERSAO = '2026-10-27-1';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
