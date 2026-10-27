@@ -273,6 +273,11 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .grp{border-radius:12px}.tile{width:26px;height:26px;border-radius:7px}
 .r-it .tx b{font-size:13.5px}.r-it .tx span{font-size:11.5px}.r-hr{font-size:12px}.valor{font-size:44px}.keys button{font-size:22px;height:48px}.r-voo-r b,.r-bp-m b{font-size:22px}.r-bp-m b{font-size:28px}
 .so-desk{display:none!important}
+.pl{display:flex;align-items:center;gap:10px;background:#16213A;border-radius:28px;padding:9px 9px 9px 20px;color:#fff;box-shadow:0 8px 20px rgba(10,20,50,.25);margin:14px 0}
+.pl-v{flex:1;min-width:0}.pl-v small{display:block;font-size:11px;color:#9FB0D3}.pl-v b{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.pl-c{width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer}
+.pl-a{height:42px;border-radius:21px;border:0;background:#fff;color:#16213A;display:flex;align-items:center;gap:6px;padding:0 18px;font-size:14px;font-weight:700;cursor:pointer}
+.pl-a:disabled{opacity:.6}
 .dv{display:flex;gap:10px;margin-bottom:12px}
 .dv-c{flex:1;background:var(--fill);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .dv-c .av{width:30px;height:30px;font-size:12px}
@@ -883,7 +888,9 @@ function telaAcerto(id){
       return `<div class="dv-c"><span class="av ${k}">${k}</span><b>${NOME[k]}</b><small>Pagou</small><span>${brl(pago)}</span><small>Parte ${k === 'S' ? 'dele' : 'dela'}</small><span>${brl(parte)}</span><div class="dv-p ${pill[0]}">${pill[1]}</div></div>`; }).join('')}
   </div>
   <div class="grp"><div class="row" style="cursor:default"><span class="tx"><b>Total da viagem</b></span><span class="val">${brl(r.total)}</span></div></div>
-  ${zerado ? '' : `<button class="btn" id="bt-acertar">Marcar como acertado</button><button class="btn-plain" id="bt-copiar" style="margin-top:-8px">Copiar valor para o Pix</button>`}
+  ${zerado ? '' : `<div class="pl"><div class="pl-v"><small>${NOME[deve]} deve ${recebe==='S'?'ao':'à'} ${NOME[recebe]}</small><b>${brl(val, true)}</b></div>
+    <button class="pl-c" id="bt-copiar" aria-label="Copiar valor para o Pix">${sv('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',18,1.9)}</button>
+    <button class="pl-a" id="bt-acertar">${sv('<path d="M5 12l5 5 9-10"/>',16,2.3)} Acertar</button></div>`}
   ${hist ? `<div class="sh">Acertos feitos nesta viagem</div><div class="grp">${hist}</div>` : ''}
   ${tabbar('gastos')}`;
   const bc = document.getElementById('bt-copiar');
@@ -1471,7 +1478,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-26';
+const VERSAO = '2026-10-27-27';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
