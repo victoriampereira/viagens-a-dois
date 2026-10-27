@@ -273,6 +273,15 @@ body{font-size:13.5px}h1.t{font-size:22px;font-weight:700;letter-spacing:-.025em
 .grp{border-radius:12px}.tile{width:26px;height:26px;border-radius:7px}
 .r-it .tx b{font-size:13.5px}.r-it .tx span{font-size:11.5px}.r-hr{font-size:12px}.valor{font-size:44px}.keys button{font-size:22px;height:48px}.r-voo-r b,.r-bp-m b{font-size:22px}.r-bp-m b{font-size:28px}
 .so-desk{display:none!important}
+.r-mapa{height:230px;border-radius:16px;overflow:hidden;background:var(--fill);margin:4px 0 6px;position:relative;z-index:0}
+.r-mapa.vazio{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;font-size:13px;color:var(--muted2);height:auto;min-height:64px}
+.r-mk{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font:700 13px/28px Manrope,sans-serif;text-align:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.r-n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--acc);color:#fff;font:700 10px Manrope,sans-serif;font-style:normal;margin-right:5px;vertical-align:1px}
+.r-pdf{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:8px;border-top:.5px dashed var(--fill2);font-size:12px;font-weight:600;color:var(--acc)}
+.r-docs{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:14px;color:var(--ink)}
+.r-docs label{display:flex;gap:8px;align-items:center}
+.r-sg{width:100%;text-align:left;background:none;border:0}
+.r-sg-i{padding:12px 16px;font-size:13px}.r-sg-i.muted{color:var(--muted2)}.r-sg-i.ok{color:var(--acc);font-weight:600;display:flex;gap:6px;align-items:center}
 /* computador: barra lateral + conteúdo (mesmo jeito do Fitness) */
 @media (min-width:1000px){
 #app{max-width:1180px;display:grid;grid-template-columns:210px minmax(0,1fr);column-gap:48px;row-gap:0;align-items:start;min-height:auto;padding:48px 24px 64px}
@@ -478,13 +487,16 @@ const divTxt = g => g.divisao === 'metade' ? 'metade cada' : g.divisao === 'paga
 
 function tabbar(on){
   const a = idAtual();
-  const t = (href, key, ic, txt) => `<a href="${href}" aria-label="${txt}" class="${on===key?'on':''}" ${on===key?'aria-current="page"':''}>${sv(IC[ic],26,1.7)}${txt}</a>`;
+  const t = (href, key, ic, txt, cl) => `<a href="${href}" aria-label="${txt}" class="${cl||''} ${on===key?'on':''}" ${on===key?'aria-current="page"':''}>${sv(IC[ic]||ICR[ic],26,1.7)}${txt}</a>`;
+  const nos = cl => t('#/nos', 'nos', 'nos', 'Nós', cl);
+  const dentro = ['gastos','roteiro','lugares','reservas'].includes(on) && a;
+  if (!dentro) return `<nav class="tabbar" style="grid-template-columns:repeat(2,minmax(0,1fr))" aria-label="Navegação">${t('#/', 'viagens', 'mala', 'Viagens')}${nos()}</nav>`;
   return `<nav class="tabbar" aria-label="Navegação">
-    ${t('#/', 'viagens', 'mala', 'Viagens')}
-    ${t(a ? '#/novo/'+a : '#/nova-viagem', 'novo', 'mais', 'Novo gasto')}
-    ${t(a ? '#/acerto/'+a : '#/nova-viagem', 'acerto', 'troca', 'Divisão')}
-    ${t(a ? '#/limite/'+a : '#/nova-viagem', 'limite', 'ajuste', 'Limite')}
-    <a href="#/nos" aria-label="Nós" class="so-desk ${on==='nos'?'on':''}">${sv('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M19 15c1.5.8 2.4 2.3 2.7 4.5"/>',26,1.7)}Nós</a>
+    ${t('#/v/'+a, 'gastos', 'moeda', 'Gastos')}
+    ${t('#/v/'+a+'/roteiro', 'roteiro', 'rota', 'Roteiro')}
+    ${t('#/v/'+a+'/lugares', 'lugares', 'land', 'Lugares')}
+    ${t('#/v/'+a+'/reservas', 'reservas', 'voo', 'Reservas')}
+    ${t('#/', 'viagens', 'mala', 'Viagens', 'so-desk')}${nos('so-desk')}
   </nav>`;
 }
 
@@ -626,9 +638,8 @@ function telaViagem(id, aba){
   $app.innerHTML = `
   <nav class="nav"><a href="#/">${sv(IC.voltar,22,2.2)} Viagens</a><a href="#/limite/${id}">Editar</a></nav>
   <h1 class="t">${esc(v.nome)}</h1><div class="sub">${info}</div>
-  ${abasViagem(id, aba)}
   ${corpo}
-  ${tabbar('viagens')}`;
+  ${tabbar(aba)}`;
   ligarAbas(v, aba);
 }
 function telaGastos(id, abaUrl){
@@ -645,7 +656,7 @@ function telaGastos(id, abaUrl){
   <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Filtrar">
     <button data-aba="todos" aria-pressed="${aba==='todos'}">Todos</button><button data-aba="S" aria-pressed="${aba==='S'}">Sérgio</button><button data-aba="V" aria-pressed="${aba==='V'}">Victoria</button></div>
   ${listaGastos(lista) || `<div class="grp"><div class="empty">${vazio}</div></div>`}
-  ${tabbar('viagens')}`;
+  ${tabbar('gastos')}`;
   $app.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { abaViagem[id] = b.dataset.aba; telaGastos(id, b.dataset.aba); });
 }
 
@@ -751,7 +762,7 @@ function telaGasto(viagemId, gastoId){
     <div style="display:flex;gap:10px">
       ${g ? '<button type="button" class="btn-sec danger" id="bt-excluir">Excluir</button>' : ''}
       <button class="btn" type="submit" id="bt-salvar" style="flex:1">${g ? 'Salvar' : 'Novo gasto'}</button></div>
-  </form>${tabbar('novo')}`;
+  </form>${tabbar('gastos')}`;
   const desenhar = () => telaGasto(viagemId, gastoId);
   document.getElementById('in-desc').oninput = e => F.descricao = e.target.value;
   document.getElementById('in-desc').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
@@ -849,7 +860,7 @@ function telaAcerto(id){
   </div>
   ${zerado ? '' : `<button class="btn" id="bt-acertar">Marcar como acertado</button><button class="btn-plain" id="bt-copiar" style="margin-top:-8px">Copiar valor para o Pix</button>`}
   ${hist ? `<div class="sh">Acertos feitos nesta viagem</div><div class="grp">${hist}</div>` : ''}
-  ${tabbar('acerto')}`;
+  ${tabbar('gastos')}`;
   const bc = document.getElementById('bt-copiar');
   if (bc) bc.onclick = async () => { const t = val.toFixed(2).replace('.', ','); try { await navigator.clipboard.writeText(t); toast('Valor copiado: ' + t); } catch(e){ toast(t); } };
   const ba = document.getElementById('bt-acertar');
@@ -875,7 +886,7 @@ function telaLimite(id){
   <div class="grp"><button class="row" id="bt-lim"><span class="tx"><b>Limite total</b></span><span class="val strong">${Number(v.limite) ? brl(v.limite) : 'Definir'}</span>${CHEV}</button></div>
   <div class="sh">Dados da viagem</div>
   ${formViagem(v)}
-  ${tabbar('limite')}`;
+  ${tabbar('gastos')}`;
   document.getElementById('bt-lim').onclick = async () => { const n = await pedirValor('Limite da viagem', v.limite, true); if (n == null) return; salvarViagem({ id, limite: n }, 'Limite salvo'); };
   ligarFormViagem(v);
 }
@@ -1039,6 +1050,10 @@ const fmtDS = iso => iso ? DIAS[dataObj(iso).getDay()] + ', ' + fmtDia(iso) : ''
 const itensDe = (vid, tipo) => (D.itens || []).filter(i => i.viagem_id === vid && i.tipo === tipo);
 const itemPorId = id => (D.itens || []).find(i => i.id === id);
 const ICR = {
+  moeda: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.4 0-2.5.7-2.5 1.9 0 2.7 5 1.4 5 4.1 0 1.2-1.1 1.9-2.5 1.9-1.1 0-2-.5-2.5-1.3M12 6.5V8M12 16v1.5"/>',
+  rota: '<path d="M9 4 3 6.5v13.5L9 17.5l6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+  nos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M19 15c1.5.8 2.4 2.3 2.7 4.5"/>',
+  busca: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
   voo: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
   bed: '<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6"/><path d="M2 18h20"/>',
   land: '<path d="M3 22h18"/><path d="M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="M12 2 3 7v2h18V7z"/>',
@@ -1058,6 +1073,7 @@ function linksMapa(d){
   let maps = '', waze = '';
   if (/waze\./i.test(lk)) waze = lk; else if (lk) maps = lk;
   if (!maps && end) maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(end);
+  if (!waze && d.lat) waze = 'https://waze.com/ul?ll=' + d.lat + ',' + d.lng + '&navigate=yes';
   if (!waze && end) waze = 'https://waze.com/ul?q=' + encodeURIComponent(end) + '&navigate=yes';
   return { maps, waze };
 }
@@ -1074,6 +1090,20 @@ function diasDaViagem(v){
 }
 const diasOpc = (v, comVazio) => (comVazio ? [['','Sem dia definido']] : []).concat(diasDaViagem(v).map((d,i) => [d, `Dia ${diasEntre(v.inicio, d) + 1} · ${fmtDS(d)}`]));
 
+/* busca de lugares (Photon/OpenStreetMap; pode ser trocada por outro provedor aqui) */
+async function buscarLugares(q){
+  const r = await fetch('https://photon.komoot.io/api/?limit=7&lang=en&q=' + encodeURIComponent(q));
+  if (!r.ok) throw new Error('busca');
+  const j = await r.json();
+  return (j.features || []).map(f => { const p = f.properties || {}, c = f.geometry.coordinates;
+    const rua = [p.street, p.housenumber].filter(Boolean).join(' ');
+    const sub = [rua, p.district, p.city || p.county, p.state, p.country].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+    const nome = p.name || rua || sub;
+    return { nome, sub, endereco: [nome !== rua ? rua : '', p.city || p.county, p.country].filter(Boolean).join(', '), cidade: p.city || p.county || p.state || '', lat: +c[1].toFixed(6), lng: +c[0].toFixed(6) }; })
+    .filter(p => p.nome);
+}
+const linkLugar = p => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.nome + (p.sub ? ', ' + p.sub : ''));
+
 /* folha genérica de formulário */
 function folha(titulo, campos, x, opt){
   opt = opt || {};
@@ -1082,21 +1112,35 @@ function folha(titulo, campos, x, opt){
     const fim = v => { w.remove(); res(v); };
     const ctl = c => {
       const val = x[c.k] ?? '';
+      if (c.t === 'docs') return `<span class="fin r-docs">${(c.o.length ? c.o : [['', 'Nenhum PDF enviado ainda']]).map(o => `<label><input type="checkbox" name="${c.k}" value="${esc(o[0])}" ${(Array.isArray(val) ? val : []).includes(o[0]) ? 'checked' : ''} ${o[0] ? '' : 'disabled'}> ${esc(o[1])}</label>`).join('')}</span>`;
       if (c.t === 'select') return `<select class="fin" name="${c.k}">${c.o.map(o => `<option value="${esc(o[0])}" ${String(o[0]) === String(val) ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</select>`;
       return `<input class="fin" name="${c.k}" type="${c.t || 'text'}" value="${esc(val)}" placeholder="${esc(c.ph || '')}" autocomplete="off" ${c.t && c.t !== 'text' ? '' : 'autocapitalize="sentences"'}>`;
     };
     w.innerHTML = `<form class="sheet r-longa" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><span class="grab"></span><h3>${esc(titulo)}</h3>
-      <div class="grp">${campos.map(c => `<label class="row" style="cursor:text"><span class="tx" style="flex:none"><b>${c.l}</b></span>${ctl(c)}</label>`).join('')}</div>
+      ${opt.busca ? `<div class="grp"><label class="row" style="cursor:text"><span class="tile soft">${icr('busca',16,2)}</span><input class="fin" id="f-busca" style="text-align:left" placeholder="Buscar no mapa (ex.: coli…)" autocomplete="off"></label><div id="f-sug"></div></div>` : ''}
+      <div class="grp">${campos.map(c => { const tg = c.t === 'docs' ? 'div' : 'label'; return `<${tg} class="row" style="cursor:text"><span class="tx" style="flex:none"><b>${c.l}</b></span>${ctl(c)}</${tg}>`; }).join('')}</div>
       ${opt.mapa ? btnsMapa(opt.mapa) : ''}
       <button class="btn" type="submit">Salvar</button>
       ${opt.excluir ? '<button class="btn-plain danger" type="button" id="f-del">Excluir</button>' : ''}
       <button class="btn-plain" type="button" id="f-x">Cancelar</button></form>`;
     w.onclick = e => { if (e.target === w) fim(null); };
     w.querySelector('#f-x').onclick = () => fim(null);
+    const extra = {};
+    const bq = w.querySelector('#f-busca');
+    if (bq) { let tm, n = 0; const sug = w.querySelector('#f-sug');
+      bq.oninput = () => { clearTimeout(tm); const q = bq.value.trim(); if (q.length < 3) { sug.innerHTML = ''; return; }
+        tm = setTimeout(async () => { const mine = ++n; sug.innerHTML = '<div class="r-sg-i muted">Buscando…</div>';
+          try { const rs = await buscarLugares(q); if (mine !== n) return;
+            sug.innerHTML = rs.length ? rs.map((p, i) => `<button type="button" class="row r-sg" data-i="${i}"><span class="tile soft">${icr('pin',16)}</span><span class="tx"><b>${esc(p.nome)}</b><span>${esc(p.sub)}</span></span></button>`).join('') : '<div class="r-sg-i muted">Nada encontrado. Tente outro nome.</div>';
+            sug.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const p = rs[+b.dataset.i], m = opt.busca(p);
+              Object.keys(m).forEach(k => { const el = w.querySelector(`[name="${k}"]`); if (el && el.tagName !== 'SELECT') el.value = m[k]; });
+              extra.lat = p.lat; extra.lng = p.lng; bq.value = ''; sug.innerHTML = `<div class="r-sg-i ok">${icr('check',14,3)} ${esc(p.nome)} · localização salva</div>`; });
+          } catch(e){ if (mine === n) sug.innerHTML = '<div class="r-sg-i muted">Busca indisponível agora. Preencha à mão.</div>'; } }, 380); }; }
     const del = w.querySelector('#f-del'); if (del) del.onclick = () => { if (confirm('Excluir este item?')) fim('__excluir'); };
     w.querySelector('form').onsubmit = e => {
       e.preventDefault();
-      const r = {}; campos.forEach(c => r[c.k] = w.querySelector(`[name="${c.k}"]`).value.trim());
+      const r = {}; campos.forEach(c => r[c.k] = c.t === 'docs' ? [...w.querySelectorAll(`[name="${c.k}"]:checked`)].map(i => i.value) : w.querySelector(`[name="${c.k}"]`).value.trim());
+      Object.assign(r, extra);
       if (opt.obrig && !r[opt.obrig]) { toast(opt.msg || 'Preencha o nome'); return; }
       fim(r);
     };
@@ -1123,16 +1167,16 @@ const editarAtividade = (vid, it, pre) => { const v = viagem(vid);
     { k:'dia', l:'Dia', t:'select', o:diasOpc(v, true) }, { k:'hora', l:'Horário', t:'time' },
     { k:'endereco', l:'Endereço', ph:'Rua, número, cidade' }, { k:'link', l:'Link Maps ou Waze', ph:'Colar link' }, { k:'obs', l:'Observação' }],
     Object.assign({ tipo:'passeio', titulo:'', dia:'', hora:'', endereco:'', link:'', obs:'', feito:false }, pre || {}),
-    { titulo: it ? 'Editar atividade' : (pre && pre.tipo === 'historico' ? 'Novo local histórico' : 'Nova atividade'), obrig:'titulo' }); };
+    { titulo: it ? 'Editar atividade' : (pre && pre.tipo === 'historico' ? 'Novo local histórico' : 'Nova atividade'), obrig:'titulo', busca: p => ({ titulo: p.nome, endereco: p.endereco, link: linkLugar(p) }) }); };
 const editarEstadia = (vid, it, pre) => editarItem(vid, 'estadia', it, [
     { k:'cidade', l:'Local', ph:'Ex.: Antígua' }, { k:'de', l:'Chegada', t:'date' }, { k:'ate', l:'Saída', t:'date' }],
-    Object.assign({ cidade:'', de:'', ate:'' }, pre || {}), { titulo: it ? 'Editar local' : 'Novo local', obrig:'cidade', msg:'Dê um nome para o local' });
+    Object.assign({ cidade:'', de:'', ate:'' }, pre || {}), { titulo: it ? 'Editar local' : 'Novo local', obrig:'cidade', msg:'Dê um nome para o local', busca: p => ({ cidade: p.nome }) });
 const editarVoo = (vid, it, pre) => editarItem(vid, 'voo', it, [
     { k:'grupo', l:'Trecho', ph:'Ida, Volta…' }, { k:'cia', l:'Companhia' }, { k:'numero', l:'Voo', ph:'Ex.: CM 204' },
     { k:'de', l:'Origem', ph:'Sigla (GIG)' }, { k:'cidade_de', l:'Cidade de origem' }, { k:'para', l:'Destino', ph:'Sigla (GUA)' }, { k:'cidade_para', l:'Cidade de destino' },
     { k:'saida', l:'Saída', t:'datetime-local' }, { k:'chegada', l:'Chegada', t:'datetime-local' },
-    { k:'localizador', l:'Localizador' }, { k:'assentos', l:'Assentos' }, { k:'passageiros', l:'Passageiros' }, { k:'obs', l:'Observação' }],
-    Object.assign({ grupo:'Ida', cia:'', numero:'', de:'', para:'', cidade_de:'', cidade_para:'', saida:'', chegada:'', localizador:'', assentos:'', passageiros:'Sérgio, Victoria', obs:'' }, pre || {}),
+    { k:'localizador', l:'Localizador' }, { k:'assentos', l:'Assentos' }, { k:'passageiros', l:'Passageiros' }, { k:'anexos', l:'PDF da passagem', t:'docs', o:(D.anexos || []).filter(a => a.viagem_id === vid).map(a => [a.id, a.nome]) }, { k:'obs', l:'Observação' }],
+    Object.assign({ anexos:[], grupo:'Ida', cia:'', numero:'', de:'', para:'', cidade_de:'', cidade_para:'', saida:'', chegada:'', localizador:'', assentos:'', passageiros:'Sérgio, Victoria', obs:'' }, pre || {}),
     { titulo: it ? 'Editar passagem' : 'Nova passagem', obrig:'de', msg:'Informe a origem e o destino' });
 const editarHosp = (vid, it, pre) => editarItem(vid, 'hospedagem', it, [
     { k:'nome', l:'Nome', ph:'Ex.: Casa Colonial' }, { k:'cidade', l:'Cidade' },
@@ -1140,7 +1184,7 @@ const editarHosp = (vid, it, pre) => editarItem(vid, 'hospedagem', it, [
     { k:'endereco', l:'Endereço', ph:'Rua, número, cidade' }, { k:'link', l:'Link Maps ou Waze', ph:'Colar link' },
     { k:'reserva', l:'Código da reserva' }, { k:'valor', l:'Valor', ph:'Ex.: R$ 1.050' }, { k:'obs', l:'Observação' }],
     Object.assign({ nome:'', cidade:'', entrada:'', hora_entrada:'', saida:'', hora_saida:'', endereco:'', link:'', reserva:'', valor:'', obs:'' }, pre || {}),
-    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Dê um nome para a hospedagem' });
+    { titulo: it ? 'Editar hospedagem' : 'Nova hospedagem', obrig:'nome', msg:'Dê um nome para a hospedagem', busca: p => ({ nome: p.nome, cidade: p.cidade, endereco: p.endereco, link: linkLugar(p) }) });
 
 /* --- abas da viagem --- */
 function entradasDia(vid, d){
@@ -1167,14 +1211,35 @@ function linhaDia(e){
 function corpoRoteiro(v){
   if (!v.inicio) return `<div class="grp"><div class="r-vazio">Defina as datas da viagem para ver os dias do roteiro.<br><a href="#/limite/${v.id}">Editar viagem</a></div></div>`;
   const hoje = hojeISO(), es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
-  const chips = es.map(i => { const e = i.dados, ativo = e.de <= hoje && hoje < e.ate;
-    return `<button class="r-ch ${ativo ? 'on' : ''}" data-est="${i.id}"><b>${esc(e.cidade)}</b><span>${e.de ? fmtDia(e.de) : ''}${e.ate ? ' – ' + fmtDia(e.ate) : ''}</span></button>`; }).join('');
+  const chips = es.map((i, n) => { const e = i.dados, ativo = e.de <= hoje && hoje < e.ate;
+    return `<button class="r-ch ${ativo ? 'on' : ''}" data-est="${i.id}"><b>${e.lat ? `<i class="r-n">${n + 1}</i>` : ''}${esc(e.cidade)}</b><span>${e.de ? fmtDia(e.de) : ''}${e.ate ? ' – ' + fmtDia(e.ate) : ''}</span></button>`; }).join('');
   const dias = diasDaViagem(v).map(d => {
     const lin = entradasDia(v.id, d).map(linhaDia).join(''), on = onde(v.id, d);
     return `<div><div class="r-dh ${d === hoje ? 'hoje' : ''}"><b>Dia ${diasEntre(v.inicio, d) + 1}</b><span>${fmtDS(d)}</span>${on ? `<i>${icr('pin',12,2)} ${esc(on)}</i>` : ''}</div>
       <div class="grp">${lin}<button class="row r-it r-add" data-add-dia="${d}"><span class="r-hr"></span><span class="tx"><b>${icr('plus',16,2.2)} Adicionar atividade</b></span></button></div></div>`; }).join('');
   return `<div class="sh" style="margin:2px 0 -6px 4px">Onde estaremos</div>
-    <div class="r-onde">${chips}<button class="r-ch add" data-est="">+ Local</button></div>${dias}`;
+    <div class="r-onde">${chips}<button class="r-ch add" data-est="">+ Local</button></div>
+    ${es.some(i => i.dados.lat) ? '<div id="mapa" class="r-mapa" aria-label="Mapa dos locais da viagem"></div>' : '<div class="r-mapa vazio">Use a busca ao adicionar um local para ele aparecer no mapa.</div>'}${dias}`;
+}
+function carregarLeaflet(){
+  if (window.L) return Promise.resolve();
+  return window._lf || (window._lf = new Promise((ok, err) => {
+    const c = document.createElement('link'); c.rel = 'stylesheet'; c.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'; document.head.appendChild(c);
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'; s.onload = ok; s.onerror = () => { window._lf = null; err(); }; document.head.appendChild(s); }));
+}
+async function desenharMapa(v){
+  const el = document.getElementById('mapa'); if (!el) return;
+  try { await carregarLeaflet(); } catch(e){ el.className = 'r-mapa vazio'; el.textContent = 'Não consegui carregar o mapa agora.'; return; }
+  if (!document.body.contains(el)) return;
+  const es = itensDe(v.id,'estadia').sort((a,b) => (a.dados.de || '') < (b.dados.de || '') ? -1 : 1);
+  const pts = []; es.forEach((i, n) => { if (i.dados.lat) pts.push([+i.dados.lat, +i.dados.lng, n + 1, i.dados.cidade]); });
+  const map = L.map(el, { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+  if (pts.length > 1) L.polyline(pts.map(p => [p[0], p[1]]), { color: '#0A84FF', weight: 3, dashArray: '2 7', opacity: .85 }).addTo(map);
+  itensDe(v.id,'atividade').forEach(i => { const x = i.dados; if (x.lat) L.circleMarker([+x.lat, +x.lng], { radius: 5, color: '#fff', weight: 2, fillColor: '#FF9500', fillOpacity: 1 }).addTo(map).bindTooltip(x.titulo); });
+  pts.forEach(p => L.marker([p[0], p[1]], { icon: L.divIcon({ className: '', html: `<div class="r-mk">${p[2]}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(map).bindTooltip(p[3]));
+  const todos = pts.map(p => [p[0], p[1]]).concat(itensDe(v.id,'atividade').filter(i => i.dados.lat).map(i => [+i.dados.lat, +i.dados.lng]));
+  if (todos.length === 1) map.setView(todos[0], 11); else map.fitBounds(todos, { padding: [28, 28] });
 }
 function corpoLugares(v){
   const ls = itensDe(v.id,'atividade').filter(i => i.dados.tipo === 'historico').sort((a,b) => (a.dados.dia || '9') < (b.dados.dia || '9') ? -1 : 1);
@@ -1189,7 +1254,7 @@ function corpoLugares(v){
 }
 const cartaoVoo = i => { const x = i.dados;
   return `<a class="r-voo" href="#/voo/${i.id}"><div class="r-voo-t"><span>${esc(x.grupo || 'Voo')} · ${fmtDS(dtDia(x.saida))}</span><span>${esc(x.cia)} ${esc(x.numero)}</span></div>
-    <div class="r-voo-r"><div><b>${esc(x.de)}</b><small>${hm(x.saida)}</small></div><div class="r-voo-l"><i></i>${icr('voo',16,1.6)}<i></i></div><div style="text-align:right"><b>${esc(x.para)}</b><small>${hm(x.chegada)}${dtDia(x.chegada) > dtDia(x.saida) ? ' (+1)' : ''}</small></div></div></a>`; };
+    <div class="r-voo-r"><div><b>${esc(x.de)}</b><small>${hm(x.saida)}</small></div><div class="r-voo-l"><i></i>${icr('voo',16,1.6)}<i></i></div><div style="text-align:right"><b>${esc(x.para)}</b><small>${hm(x.chegada)}${dtDia(x.chegada) > dtDia(x.saida) ? ' (+1)' : ''}</small></div></div>${(x.anexos || []).length ? `<div class="r-pdf">${icr('doc',13,2)} PDF da passagem</div>` : ''}</a>`; };
 function corpoReservas(v){
   const voos = itensDe(v.id,'voo').sort((a,b) => (a.dados.saida || '') < (b.dados.saida || '') ? -1 : 1);
   const hs = itensDe(v.id,'hospedagem').sort((a,b) => (a.dados.entrada || '') < (b.dados.entrada || '') ? -1 : 1);
@@ -1236,6 +1301,7 @@ async function menuDoc(a){
   else if (o === 'excluir' && confirm('Excluir este documento?')) { try { await rpc('vd_excluir', { p_tipo:'anexo', p_id:a.id }); await carregar(true); toast('Documento excluído'); } catch(e){ toast(e.message); } }
 }
 function ligarAbas(v, aba){
+  if (aba === 'roteiro') desenharMapa(v);
   const q = s => $app.querySelectorAll(s);
   q('[data-aba]').forEach(b => b.onclick = () => { location.hash = '#/v/' + v.id + (b.dataset.aba === 'gastos' ? '' : '/' + b.dataset.aba); });
   q('[data-nopen]').forEach(a => a.onclick = e => e.stopPropagation());
@@ -1252,7 +1318,9 @@ function ligarAbas(v, aba){
 function telaVoo(id){
   const it = itemPorId(id); if (!it) return naoAchou();
   const x = it.dados, v = viagem(it.viagem_id), vol = '#/v/' + it.viagem_id + '/reservas';
-  const doc = (D.anexos || []).filter(a => a.viagem_id === it.viagem_id);
+  const todosDocs = (D.anexos || []).filter(a => a.viagem_id === it.viagem_id);
+  const lig = Array.isArray(x.anexos) ? todosDocs.filter(a => x.anexos.includes(a.id)) : [];
+  const doc = lig.length ? lig : todosDocs;
   $app.innerHTML = `
   <nav class="nav"><a href="${vol}">${sv(IC.voltar,22,2.2)} Reservas</a><button id="bt-ed">Editar</button></nav>
   <h1 class="t">${esc(x.grupo || 'Voo')}</h1><div class="sub">${fmtDS(dtDia(x.saida))}${v ? ' · ' + esc(v.nome) : ''}</div>
@@ -1265,8 +1333,8 @@ function telaVoo(id){
     <div class="row"><span class="tx" style="flex:none"><b>Passageiros</b></span><span class="fin">${esc(x.passageiros || '—')}</span></div>
     ${x.obs ? `<div class="row"><span class="tx" style="flex:none"><b>Observação</b></span><span class="fin">${esc(x.obs)}</span></div>` : ''}</div>
   ${x.localizador ? '<button class="btn-sec" id="bt-copiar" style="width:100%">Copiar localizador</button>' : ''}
-  ${doc.length ? `<div class="sh">Documentos</div><div class="grp">${doc.map(a => `<button class="row" data-doc="${a.id}"><span class="tile soft">${icr('doc',16)}</span><span class="tx"><b>${esc(a.nome)}</b></span>${CHEV}</button>`).join('')}</div>` : ''}
-  ${tabbar('viagens')}`;
+  ${doc.length ? `<div class="sh">${lig.length ? 'PDF desta passagem' : 'Documentos da viagem'}</div><div class="grp">${doc.map(a => `<button class="row" data-doc="${a.id}"><span class="tile soft">${icr('doc',16)}</span><span class="tx"><b>${esc(a.nome)}</b><span>Toque para abrir o PDF</span></span>${CHEV}</button>`).join('')}</div>${lig.length ? '' : '<div class="foot">Edite a passagem para escolher o PDF dela.</div>'}` : ''}
+  ${tabbar('reservas')}`;
   document.getElementById('bt-ed').onclick = () => editarVoo(it.viagem_id, it);
   const c = document.getElementById('bt-copiar'); if (c) c.onclick = async () => { try { await navigator.clipboard.writeText(x.localizador); toast('Localizador copiado'); } catch(e){ toast(x.localizador); } };
   $app.querySelectorAll('[data-doc]').forEach(b => b.onclick = () => abrirAnexo(doc.find(a => a.id === b.dataset.doc)));
@@ -1284,7 +1352,7 @@ function telaHosp(id){
     <div class="row"><span class="tx" style="flex:none"><b>Reserva</b></span><span class="fin" style="color:var(--ink);font-weight:600">${esc(x.reserva || '—')}</span></div>
     <div class="row"><span class="tx" style="flex:none"><b>Valor</b></span><span class="fin">${esc(x.valor || '—')}</span></div>
     ${x.obs ? `<div class="row"><span class="tx" style="flex:none"><b>Observação</b></span><span class="fin">${esc(x.obs)}</span></div>` : ''}</div>
-  ${tabbar('viagens')}`;
+  ${tabbar('reservas')}`;
   document.getElementById('bt-ed').onclick = () => editarHosp(it.viagem_id, it);
 }
 function abasViagem(id, aba){
@@ -1316,7 +1384,7 @@ function render(){
 function emFormulario(){ return /^#\/(novo|gasto\/|nova-viagem|limite)/.test(location.hash) || document.querySelector('.veil') || (document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)); }
 
 /* ---------- atualização automática ---------- */
-const VERSAO = '2026-10-27-17';
+const VERSAO = '2026-10-27-18';
 async function checarVersao(){
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
